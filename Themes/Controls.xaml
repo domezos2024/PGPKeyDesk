@@ -1,0 +1,618 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="Colors.xaml"/>
+    </ResourceDictionary.MergedDictionaries>
+
+    <!-- Shared timing for hover/press feedback -->
+    <Duration x:Key="HoverInDuration">0:0:0.1</Duration>
+    <Duration x:Key="HoverOutDuration">0:0:0.15</Duration>
+
+    <!-- ===== Global implicit styles ===== -->
+
+    <!-- Fades every window in on load instead of popping in instantly -->
+    <Style TargetType="Window">
+        <Setter Property="Opacity" Value="0"/>
+        <Style.Triggers>
+            <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                <BeginStoryboard>
+                    <Storyboard>
+                        <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                         From="0" To="1" Duration="0:0:0.18"/>
+                    </Storyboard>
+                </BeginStoryboard>
+            </EventTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style TargetType="ScrollBar">
+        <Setter Property="Background" Value="{StaticResource BaseBg}"/>
+        <Setter Property="Width" Value="8"/>
+    </Style>
+
+    <Style TargetType="TabControl">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="0"/>
+    </Style>
+
+    <Style TargetType="TabItem">
+        <Setter Property="Background" Value="{StaticResource MantleBg}"/>
+        <Setter Property="Foreground" Value="{StaticResource TextDisabled}"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="18,10"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontWeight" Value="Medium"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="TabItem">
+                    <Grid>
+                        <Border x:Name="TabBd" Background="{TemplateBinding Background}"
+                                CornerRadius="6,6,0,0" Margin="0,0,4,0"/>
+                        <Border x:Name="HoverOverlay" Background="{StaticResource Surface0}"
+                                CornerRadius="6,6,0,0" Margin="0,0,4,0"
+                                Opacity="0" IsHitTestVisible="False"/>
+                        <ContentPresenter ContentSource="Header"
+                                          Margin="{TemplateBinding Padding}"
+                                          HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"/>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="TabBd" Property="Background" Value="{StaticResource BaseBg}"/>
+                            <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="HoverOverlay"
+                                                         Storyboard.TargetProperty="Opacity"
+                                                         To="1" Duration="{StaticResource HoverInDuration}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="HoverOverlay"
+                                                         Storyboard.TargetProperty="Opacity"
+                                                         To="0" Duration="{StaticResource HoverOutDuration}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="RadioButton">
+        <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RadioButton">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Grid Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,8,0">
+                            <Ellipse x:Name="OuterCircle"
+                                     Stroke="{StaticResource Surface1}" StrokeThickness="2"
+                                     Fill="Transparent"/>
+                            <Ellipse x:Name="InnerDot"
+                                     Width="8" Height="8"
+                                     Fill="{StaticResource AccentBlue}"
+                                     Opacity="0"
+                                     RenderTransformOrigin="0.5,0.5">
+                                <Ellipse.RenderTransform>
+                                    <ScaleTransform ScaleX="0.3" ScaleY="0.3"/>
+                                </Ellipse.RenderTransform>
+                            </Ellipse>
+                        </Grid>
+                        <ContentPresenter VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="OuterCircle" Property="Stroke" Value="{StaticResource AccentBlue}"/>
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="InnerDot"
+                                                         Storyboard.TargetProperty="Opacity"
+                                                         To="1" Duration="0:0:0.1"/>
+                                        <DoubleAnimation Storyboard.TargetName="InnerDot"
+                                                         Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                                                         To="1" Duration="0:0:0.15">
+                                            <DoubleAnimation.EasingFunction>
+                                                <BackEase EasingMode="EaseOut" Amplitude="0.6"/>
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                        <DoubleAnimation Storyboard.TargetName="InnerDot"
+                                                         Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                                                         To="1" Duration="0:0:0.15">
+                                            <DoubleAnimation.EasingFunction>
+                                                <BackEase EasingMode="EaseOut" Amplitude="0.6"/>
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="InnerDot"
+                                                         Storyboard.TargetProperty="Opacity"
+                                                         To="0" Duration="0:0:0.1"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="OuterCircle" Property="Stroke" Value="{StaticResource AccentBlueHover}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ===== Text ===== -->
+
+    <Style x:Key="Label" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource TextSubtle}"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Margin" Value="0,0,0,4"/>
+    </Style>
+
+    <Style x:Key="FieldLabel" TargetType="TextBlock" BasedOn="{StaticResource Label}">
+        <Setter Property="Margin" Value="0,0,0,5"/>
+        <Setter Property="FontWeight" Value="Medium"/>
+    </Style>
+
+    <!-- ===== Inputs ===== -->
+
+    <Style x:Key="Input" TargetType="TextBox">
+        <Setter Property="Background" Value="{StaticResource Surface0}"/>
+        <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource Surface1}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding" Value="8,6"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="CaretBrush" Value="{StaticResource TextPrimary}"/>
+        <Setter Property="SelectionBrush" Value="{StaticResource AccentBlue}"/>
+        <Style.Triggers>
+            <Trigger Property="IsKeyboardFocused" Value="True">
+                <Setter Property="BorderBrush" Value="{StaticResource AccentBlue}"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="InputBox" TargetType="TextBox" BasedOn="{StaticResource Input}">
+        <Setter Property="Padding" Value="10,8"/>
+    </Style>
+
+    <Style x:Key="PasswordInput" TargetType="PasswordBox">
+        <Setter Property="Background" Value="{StaticResource Surface0}"/>
+        <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource Surface1}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding" Value="8,6"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="CaretBrush" Value="{StaticResource TextPrimary}"/>
+        <Setter Property="SelectionBrush" Value="{StaticResource AccentBlue}"/>
+        <Style.Triggers>
+            <Trigger Property="IsKeyboardFocused" Value="True">
+                <Setter Property="BorderBrush" Value="{StaticResource AccentBlue}"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- ===== Buttons =====
+         Each button template layers: base fill -> hover-tint overlay (opacity animated
+         on IsMouseOver) -> content. A press (IsPressed) trigger nudges scale down
+         slightly for tactile feedback. -->
+
+    <Style x:Key="PrimaryBtn" TargetType="Button">
+        <Setter Property="Background" Value="{StaticResource AccentBlue}"/>
+        <Setter Property="Foreground" Value="{StaticResource BaseBg}"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="20,8"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
+        <Setter Property="RenderTransform">
+            <Setter.Value>
+                <ScaleTransform ScaleX="1" ScaleY="1"/>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid>
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="6"/>
+                        <Border x:Name="HoverOverlay" Background="{StaticResource AccentBlueHover}"
+                                CornerRadius="6" Opacity="0" IsHitTestVisible="False"/>
+                        <ContentPresenter Margin="{TemplateBinding Padding}"
+                                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="HoverOverlay" Storyboard.TargetProperty="Opacity" To="1" Duration="{StaticResource HoverInDuration}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="HoverOverlay" Storyboard.TargetProperty="Opacity" To="0" Duration="{StaticResource HoverOutDuration}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter Property="RenderTransform">
+                                <Setter.Value>
+                                    <ScaleTransform ScaleX="0.97" ScaleY="0.97"/>
+                                </Setter.Value>
+                            </Setter>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource Surface1}"/>
+                            <Setter Property="Foreground" Value="{StaticResource TextDisabled}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="SecondaryBtn" TargetType="Button">
+        <Setter Property="Background" Value="{StaticResource Surface1}"/>
+        <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="20,8"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid>
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="6"/>
+                        <Border x:Name="HoverOverlay" Background="{StaticResource Surface2}"
+                                CornerRadius="6" Opacity="0" IsHitTestVisible="False"/>
+                        <ContentPresenter Margin="{TemplateBinding Padding}"
+                                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="HoverOverlay" Storyboard.TargetProperty="Opacity" To="1" Duration="{StaticResource HoverInDuration}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="HoverOverlay" Storyboard.TargetProperty="Opacity" To="0" Duration="{StaticResource HoverOutDuration}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="EncryptBtn" TargetType="Button">
+        <Setter Property="Background" Value="{StaticResource AccentGreen}"/>
+        <Setter Property="Foreground" Value="{StaticResource BaseBg}"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="18,9"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid>
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="6"/>
+                        <Border x:Name="HoverOverlay" Background="{StaticResource AccentGreenHover}"
+                                CornerRadius="6" Opacity="0" IsHitTestVisible="False"/>
+                        <ContentPresenter Margin="{TemplateBinding Padding}"
+                                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="HoverOverlay" Storyboard.TargetProperty="Opacity" To="1" Duration="{StaticResource HoverInDuration}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="HoverOverlay" Storyboard.TargetProperty="Opacity" To="0" Duration="{StaticResource HoverOutDuration}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource Surface1}"/>
+                            <Setter Property="Foreground" Value="{StaticResource TextDisabled}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="DangerBtn" TargetType="Button">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{StaticResource AccentRed}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderBrush" Value="{StaticResource AccentRed}"/>
+        <Setter Property="Padding" Value="10,5"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid>
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="5"/>
+                        <Border x:Name="HoverOverlay" Background="{StaticResource AccentRedHoverBg}"
+                                CornerRadius="5" Opacity="0" IsHitTestVisible="False"/>
+                        <ContentPresenter Margin="{TemplateBinding Padding}"
+                                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="HoverOverlay" Storyboard.TargetProperty="Opacity" To="1" Duration="{StaticResource HoverInDuration}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="HoverOverlay" Storyboard.TargetProperty="Opacity" To="0" Duration="{StaticResource HoverOutDuration}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Quiet sidebar action button (background tile, foreground carries the accent).
+         Default foreground matches the former "AddBtn" green; override Foreground
+         on individual instances (e.g. the yellow "Generate Key Pair" button) as needed. -->
+    <Style x:Key="QuietSidebarBtn" TargetType="Button">
+        <Setter Property="Background" Value="{StaticResource Surface0}"/>
+        <Setter Property="Foreground" Value="{StaticResource AccentGreen}"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="12,8"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid>
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="6"/>
+                        <Border x:Name="HoverOverlay" Background="{StaticResource Surface1}"
+                                CornerRadius="6" Opacity="0" IsHitTestVisible="False"/>
+                        <ContentPresenter Margin="{TemplateBinding Padding}"
+                                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="HoverOverlay" Storyboard.TargetProperty="Opacity" To="1" Duration="{StaticResource HoverInDuration}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="HoverOverlay" Storyboard.TargetProperty="Opacity" To="0" Duration="{StaticResource HoverOutDuration}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Large call-to-action button (used e.g. for "Generate Key Pair") -->
+    <Style x:Key="GenerateActionBtn" TargetType="Button">
+        <Setter Property="Background" Value="{StaticResource AccentYellow}"/>
+        <Setter Property="Foreground" Value="{StaticResource BaseBg}"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="20,9"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid>
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="6"/>
+                        <Border x:Name="HoverOverlay" Background="{StaticResource AccentYellowHover}"
+                                CornerRadius="6" Opacity="0" IsHitTestVisible="False"/>
+                        <ContentPresenter Margin="{TemplateBinding Padding}"
+                                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="HoverOverlay" Storyboard.TargetProperty="Opacity" To="1" Duration="{StaticResource HoverInDuration}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="HoverOverlay" Storyboard.TargetProperty="Opacity" To="0" Duration="{StaticResource HoverOutDuration}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource Surface1}"/>
+                            <Setter Property="Foreground" Value="{StaticResource TextDisabled}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Small chip-style action button (e.g. "Load File", "Copy", "Export") -->
+    <Style x:Key="ChipBtn" TargetType="Button">
+        <Setter Property="Background" Value="{StaticResource Surface1}"/>
+        <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="10,6"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid>
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="5"/>
+                        <Border x:Name="HoverOverlay" Background="{StaticResource Surface2}"
+                                CornerRadius="5" Opacity="0" IsHitTestVisible="False"/>
+                        <ContentPresenter Margin="{TemplateBinding Padding}"
+                                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="HoverOverlay" Storyboard.TargetProperty="Opacity" To="1" Duration="{StaticResource HoverInDuration}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="HoverOverlay" Storyboard.TargetProperty="Opacity" To="0" Duration="{StaticResource HoverOutDuration}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ===== Lists ===== -->
+
+    <Style x:Key="ProfileItem" TargetType="ListBoxItem">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+        <Setter Property="Padding" Value="12,10"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListBoxItem">
+                    <Grid Margin="0,2">
+                        <Border x:Name="HoverOverlay" Background="{StaticResource Surface0}"
+                                CornerRadius="6" Opacity="0" IsHitTestVisible="False"/>
+                        <Border x:Name="SelectedBd" Background="{StaticResource Surface1}"
+                                CornerRadius="6" Opacity="0" IsHitTestVisible="False"/>
+                        <Grid Margin="{TemplateBinding Padding}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="&#x1F511;" FontSize="14" VerticalAlignment="Center"
+                                       Margin="0,0,10,0"/>
+                            <ContentPresenter Grid.Column="1" VerticalAlignment="Center"/>
+                        </Grid>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="HoverOverlay" Storyboard.TargetProperty="Opacity" To="1" Duration="{StaticResource HoverInDuration}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="HoverOverlay" Storyboard.TargetProperty="Opacity" To="0" Duration="{StaticResource HoverOutDuration}"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="SelectedBd" Property="Opacity" Value="1"/>
+                            <Setter Property="Foreground" Value="{StaticResource AccentBlue}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Reveal animation for panels that toggle from Collapsed to Visible at runtime
+         (e.g. the generated-key-pair result panel): fades and slides in instead of popping. -->
+    <Style x:Key="RevealPanel" TargetType="Border">
+        <Setter Property="Opacity" Value="0"/>
+        <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
+        <Setter Property="RenderTransform">
+            <Setter.Value>
+                <TranslateTransform Y="10"/>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsVisible" Value="True">
+                <Trigger.EnterActions>
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                             To="1" Duration="0:0:0.25"/>
+                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)"
+                                             To="0" Duration="0:0:0.25">
+                                <DoubleAnimation.EasingFunction>
+                                    <QuadraticEase EasingMode="EaseOut"/>
+                                </DoubleAnimation.EasingFunction>
+                            </DoubleAnimation>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </Trigger.EnterActions>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+</ResourceDictionary>

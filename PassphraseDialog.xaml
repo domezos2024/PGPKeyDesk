@@ -1,0 +1,66 @@
+<Window x:Class="PassphraseDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Enter Passphrase — Export Private Key"
+        Height="230" Width="420"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        Background="{StaticResource BaseBg}"
+        Foreground="{StaticResource TextPrimary}"
+        Icon="1a.png"
+        Loaded="Window_Loaded">
+    <Grid Margin="22,18,22,18">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Warning banner -->
+        <Border Grid.Row="0" Background="#3D2A1A" CornerRadius="6"
+                Padding="12,8" Margin="0,0,0,14">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="&#x26A0;" Foreground="#F9E2AF" FontSize="14"
+                           VerticalAlignment="Center" Margin="0,0,8,0"/>
+                <TextBlock Text="Confirm your passphrase to authorize this export."
+                           Foreground="#F9E2AF" FontSize="12" TextWrapping="Wrap"
+                           VerticalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+
+        <TextBlock Grid.Row="1" Text="Private Key Passphrase"
+                   Foreground="#A6ADC8" FontSize="12" Margin="0,0,0,5"/>
+
+        <PasswordBox Grid.Row="2" x:Name="PwdInput"
+                     Background="#313244" Foreground="#CDD6F4"
+                     BorderBrush="#45475A" BorderThickness="1"
+                     Padding="8,7" FontSize="13"
+                     CaretBrush="#CDD6F4" SelectionBrush="#89B4FA"
+                     Margin="0,0,0,6"
+                     PreviewKeyDown="PwdInput_KeyDown"/>
+
+        <!-- Inline error -->
+        <TextBlock Grid.Row="3" x:Name="TxtError"
+                   Foreground="#F38BA8" FontSize="11"
+                   Visibility="Collapsed" TextWrapping="Wrap"
+                   Margin="0,0,0,4"/>
+
+        <StackPanel Grid.Row="5" Orientation="Horizontal"
+                    HorizontalAlignment="Right" Margin="0,10,0,0">
+            <Button x:Name="BtnCancel" Content="Cancel"
+                    Background="#45475A" Foreground="#CDD6F4"
+                    BorderThickness="0" Padding="16,7" FontSize="13"
+                    Cursor="Hand" Margin="0,0,8,0"
+                    Click="BtnCancel_Click"/>
+            <Button x:Name="BtnConfirm" Content="&#x2B06; Confirm Export"
+                    Background="#F38BA8" Foreground="#1E1E2E"
+                    BorderThickness="0" Padding="16,7" FontSize="13"
+                    FontWeight="SemiBold" Cursor="Hand"
+                    Click="BtnConfirm_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

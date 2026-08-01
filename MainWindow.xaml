@@ -1,0 +1,411 @@
+<Window x:Class="MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="OpenPGP Tool" Height="720" Width="1000"
+        MinHeight="560" MinWidth="750"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource BaseBg}"
+        Foreground="{StaticResource TextPrimary}"
+        Icon="1a.png"
+        Loaded="Window_Loaded"
+        PreviewKeyDown="Window_PreviewKeyDown">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="240"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Border Grid.Column="0" Background="#181825" BorderThickness="0,0,1,0" BorderBrush="#313244">
+            <Grid Margin="16">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <StackPanel Grid.Row="0" Margin="0,8,0,20">
+                    <TextBlock Text="&#x1F512; OpenPGP" FontSize="18" FontWeight="Bold"
+                               Foreground="#89B4FA"/>
+                    <TextBlock Text="Encrypt &amp; Decrypt" FontSize="18" FontWeight="Bold"
+                               Foreground="#CDD6F4"/>
+                    <Rectangle Height="1" Fill="#313244" Margin="0,12,0,0"/>
+                </StackPanel>
+                <Grid Grid.Row="1">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" Text="PROFILES" Foreground="#6C7086" FontSize="11"
+                               FontWeight="Bold" Margin="4,0,0,8"/>
+                    <ListBox Grid.Row="1" x:Name="ProfileListBox"
+                             Background="Transparent"
+                             BorderThickness="0"
+                             ItemContainerStyle="{StaticResource ProfileItem}"
+                             SelectionChanged="ProfileListBox_SelectionChanged"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Name}" FontSize="13"
+                                           TextTrimming="CharacterEllipsis"/>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                    <TextBlock Grid.Row="2" x:Name="TxtNoProfiles"
+                               Text="No profiles yet.&#10;Add one below."
+                               Foreground="#45475A" FontSize="12"
+                               TextAlignment="Center" Margin="0,20,0,0"
+                               Visibility="Collapsed"/>
+                </Grid>
+                <Button Grid.Row="2" Content="+ Add Profile"
+                        Style="{StaticResource QuietSidebarBtn}"
+                        HorizontalAlignment="Stretch"
+                        Click="AddProfile_Click"
+                        Margin="0,12,0,6"/>
+                <Button Grid.Row="3" Content="&#x2699; Generate Key Pair"
+                        Style="{StaticResource QuietSidebarBtn}"
+                        Foreground="{StaticResource AccentYellow}"
+                        HorizontalAlignment="Stretch"
+                        Click="GenerateKeyPair_Click"
+                        Margin="0,0,0,6"/>
+                <Button Grid.Row="4" x:Name="BtnDeleteProfile"
+                        Content="Remove Selected"
+                        Style="{StaticResource DangerBtn}"
+                        HorizontalAlignment="Stretch"
+                        Click="DeleteProfile_Click"
+                        IsEnabled="False"/>
+                <Grid Grid.Row="5" Margin="0,6,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="4"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Button Grid.Column="0" x:Name="BtnExportPublicKey"
+                            Content="&#x2B06; Public"
+                            Style="{StaticResource QuietSidebarBtn}"
+                            HorizontalAlignment="Stretch"
+                            IsEnabled="False"
+                            FontSize="11"
+                            ToolTip="Export public key as .asc"
+                            Click="OnExportPublicKeyClicked"/>
+                    <Button Grid.Column="2" x:Name="BtnExportPrivateKey"
+                            Content="&#x2B06; Private"
+                            Style="{StaticResource DangerBtn}"
+                            HorizontalAlignment="Stretch"
+                            IsEnabled="False"
+                            FontSize="11"
+                            ToolTip="Export private key as .asc"
+                            Click="OnExportPrivateKeyClicked"/>
+                </Grid>
+            </Grid>
+        </Border>
+        <Grid Grid.Column="1" Margin="28,24,28,24">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Grid Grid.Row="0" Margin="0,0,0,16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock x:Name="TxtActiveProfile"
+                               Text="No profile selected"
+                               Foreground="#6C7086" FontSize="13"/>
+                    <TextBlock Text="OpenPGP Tool" FontSize="22" FontWeight="Bold"
+                               Foreground="#CDD6F4"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border x:Name="ProfileBadge"
+                            Background="#313244" CornerRadius="20"
+                            Padding="14,6" Visibility="Collapsed">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#x2714; " Foreground="#A6E3A1" FontSize="13"/>
+                            <TextBlock x:Name="TxtBadgeName" Foreground="#A6E3A1"
+                                       FontSize="13" FontWeight="Medium"/>
+                        </StackPanel>
+                    </Border>
+                    <Button x:Name="BtnCopyPublicKey"
+                            Content="&#x1F4CB; Public Key"
+                            Style="{StaticResource QuietSidebarBtn}"
+                            Padding="12,6" Margin="8,0,0,0"
+                            ToolTip="Copy own public key to clipboard"
+                            Visibility="Collapsed"
+                            Click="CopyPublicKey_Click"/>
+                </StackPanel>
+            </Grid>
+            <TabControl Grid.Row="1" x:Name="MainTabControl">
+                <TabItem Header="&#x1F513;  Decrypt">
+                    <Grid Margin="0,16,0,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <Grid Grid.Row="0">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <Grid Grid.Row="0" Margin="0,0,0,5">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Encrypted Message (PGP Armored)"
+                                           Style="{StaticResource FieldLabel}"
+                                           VerticalAlignment="Center" Margin="0"/>
+                                <Button Grid.Column="1" Content="&#x1F4C2; Open File"
+                                        Style="{StaticResource QuietSidebarBtn}"
+                                        Padding="12,5"
+                                        Click="OnDecryptOpenFileClicked"/>
+                            </Grid>
+                            <Grid Grid.Row="1">
+                                <TextBox x:Name="TxtEncrypted"
+                                         Style="{StaticResource InputBox}"
+                                         AcceptsReturn="True"
+                                         TextWrapping="Wrap"
+                                         VerticalScrollBarVisibility="Auto"
+                                         FontFamily="Consolas"
+                                         FontSize="12"
+                                         MinHeight="60"
+                                         TextChanged="TxtEncrypted_TextChanged"/>
+                                <TextBlock x:Name="HintEncrypted"
+                                           Text="Paste PGP message here...&#x0a;-----BEGIN PGP MESSAGE-----&#x0a;...&#x0a;-----END PGP MESSAGE-----"
+                                           Foreground="#45475A" FontFamily="Consolas" FontSize="12"
+                                           Padding="11,9" IsHitTestVisible="False"
+                                           VerticalAlignment="Top"/>
+                            </Grid>
+                        </Grid>
+                        <Grid Grid.Row="1" Margin="0,14,0,14">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Passphrase" Style="{StaticResource FieldLabel}"/>
+                                <PasswordBox x:Name="PwdPassphrase"
+                                             Style="{StaticResource PasswordInput}"
+                                             PasswordChanged="PwdPassphrase_Changed"/>
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="Clear"
+                                    Style="{StaticResource DangerBtn}"
+                                    VerticalAlignment="Center"
+                                    Margin="12,0,8,0"
+                                    Click="ClearAll_Click"/>
+                            <Button Grid.Column="2" x:Name="BtnDecrypt"
+                                    Content="&#x1F513;  Decrypt"
+                                    Style="{StaticResource PrimaryBtn}"
+                                    VerticalAlignment="Center"
+                                    IsEnabled="False"
+                                    Click="Decrypt_Click"/>
+                        </Grid>
+                        <Grid Grid.Row="2">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <Grid Grid.Row="0" Margin="0,0,0,5">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Decrypted Message" Style="{StaticResource FieldLabel}"
+                                           VerticalAlignment="Center" Margin="0"/>
+                                <Button Grid.Column="1" x:Name="BtnCopyResult"
+                                        Content="Copy" Visibility="Collapsed"
+                                        Style="{StaticResource QuietSidebarBtn}"
+                                        Padding="12,5"
+                                        Click="CopyResult_Click"/>
+                            </Grid>
+                            <Border Grid.Row="1" Background="#313244" BorderBrush="#45475A" BorderThickness="1" CornerRadius="4">
+                                <TextBox x:Name="TxtDecrypted"
+                                         Background="Transparent"
+                                         Foreground="#45475A"
+                                         BorderThickness="0"
+                                         AcceptsReturn="True"
+                                         TextWrapping="Wrap"
+                                         VerticalScrollBarVisibility="Auto"
+                                         IsReadOnly="True"
+                                         FontFamily="Consolas"
+                                         FontSize="13"
+                                         Padding="10,8"
+                                         MinHeight="80"
+                                         Text="Decrypted content appears here..."/>
+                            </Border>
+                        </Grid>
+                    </Grid>
+                </TabItem>
+                <TabItem Header="&#x1F510;  Encrypt">
+                    <Grid Margin="0,16,0,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <StackPanel Grid.Row="0" Margin="0,0,0,14">
+                            <Grid Margin="0,0,0,5">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Recipient's Public Key (PGP Armored)"
+                                           Style="{StaticResource FieldLabel}"
+                                           VerticalAlignment="Center" Margin="0"/>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                    <Button Content="&#x1F4C2; Import Key"
+                                            Style="{StaticResource QuietSidebarBtn}"
+                                            Padding="12,5"
+                                            Click="OnEncryptImportRecipientKeyClicked"/>
+                                    <Button x:Name="BtnUseOwnPublicKey"
+                                            Content="My Key"
+                                            Style="{StaticResource QuietSidebarBtn}"
+                                            Padding="12,5"
+                                            Margin="6,0,0,0"
+                                            Visibility="Collapsed"
+                                            ToolTip="Insert active profile's public key"
+                                            Click="UseOwnPublicKey_Click"/>
+                                </StackPanel>
+                            </Grid>
+                            <Grid>
+                                <TextBox x:Name="TxtRecipientKey"
+                                         Style="{StaticResource InputBox}"
+                                         AcceptsReturn="True"
+                                         TextWrapping="Wrap"
+                                         VerticalScrollBarVisibility="Auto"
+                                         FontFamily="Consolas"
+                                         FontSize="11"
+                                         Height="100"
+                                         TextChanged="TxtRecipientKey_Changed"/>
+                                <TextBlock x:Name="HintRecipientKey"
+                                           Text="-----BEGIN PGP PUBLIC KEY BLOCK-----&#x0a;...&#x0a;-----END PGP PUBLIC KEY BLOCK-----"
+                                           Foreground="#45475A" FontFamily="Consolas" FontSize="11"
+                                           Padding="11,9" IsHitTestVisible="False"
+                                           VerticalAlignment="Top"/>
+                            </Grid>
+                        </StackPanel>
+                        <Grid Grid.Row="1">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock Grid.Row="0"
+                                       Text="Plaintext (message to encrypt)"
+                                       Style="{StaticResource FieldLabel}"
+                                       Margin="0,0,0,5"/>
+                            <TextBox Grid.Row="1" x:Name="TxtPlaintext"
+                                     Style="{StaticResource InputBox}"
+                                     AcceptsReturn="True"
+                                     TextWrapping="Wrap"
+                                     VerticalScrollBarVisibility="Auto"
+                                     FontFamily="Consolas"
+                                     FontSize="13"
+                                     MinHeight="60"
+                                     TextChanged="TxtPlaintext_Changed"/>
+                            <TextBlock Grid.Row="1" x:Name="HintPlaintext"
+                                       Text="Type or paste your plaintext message here..."
+                                       Foreground="#45475A" FontFamily="Consolas" FontSize="13"
+                                       Padding="11,9" IsHitTestVisible="False"
+                                       VerticalAlignment="Top"/>
+                        </Grid>
+                        <Grid Grid.Row="2" Margin="0,14,0,14">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Passphrase (to sign with your key)"
+                                           Style="{StaticResource FieldLabel}"/>
+                                <PasswordBox x:Name="PwdEncryptPassphrase"
+                                             Style="{StaticResource PasswordInput}"
+                                             PasswordChanged="PwdEncryptPassphrase_Changed"/>
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="Clear"
+                                    Style="{StaticResource DangerBtn}"
+                                    VerticalAlignment="Center"
+                                    Margin="12,0,8,0"
+                                    Click="ClearEncrypt_Click"/>
+                            <Button Grid.Column="2" x:Name="BtnEncrypt"
+                                    Content="&#x1F510;  Encrypt"
+                                    Style="{StaticResource EncryptBtn}"
+                                    VerticalAlignment="Center"
+                                    IsEnabled="False"
+                                    Click="Encrypt_Click"/>
+                        </Grid>
+                        <Grid Grid.Row="3">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <Grid Grid.Row="0" Margin="0,0,0,5">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Encrypted Message (to share)"
+                                           Style="{StaticResource FieldLabel}"
+                                           VerticalAlignment="Center" Margin="0"/>
+                                <Button Grid.Column="1" x:Name="BtnCopyEncrypted"
+                                        Content="Copy" Visibility="Collapsed"
+                                        Style="{StaticResource QuietSidebarBtn}"
+                                        Padding="12,5"
+                                        Click="CopyEncrypted_Click"/>
+                            </Grid>
+                            <Border Grid.Row="1" Background="#313244" BorderBrush="#45475A" BorderThickness="1" CornerRadius="4">
+                                <TextBox x:Name="TxtEncryptedOutput"
+                                         Background="Transparent"
+                                         Foreground="#89DCEB"
+                                         BorderThickness="0"
+                                         AcceptsReturn="True"
+                                         TextWrapping="Wrap"
+                                         VerticalScrollBarVisibility="Auto"
+                                         IsReadOnly="True"
+                                         FontFamily="Consolas"
+                                         FontSize="12"
+                                         Padding="10,8"
+                                         MinHeight="80"
+                                         Text="Encrypted output appears here..."/>
+                            </Border>
+                        </Grid>
+                    </Grid>
+                </TabItem>
+            </TabControl>
+            <Border Grid.Row="2" Margin="0,12,0,0" Background="#181825"
+                    CornerRadius="6" Padding="12,8">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock x:Name="TxtStatus"
+                               Text="Ready — select a profile to get started."
+                               Foreground="#6C7086" FontSize="12"/>
+                    <TextBlock Grid.Column="1" x:Name="TxtStatusIcon"
+                               FontSize="14" VerticalAlignment="Center"/>
+                </Grid>
+            </Border>
+        </Grid>
+        <Grid Grid.Column="1" x:Name="LoadingOverlay" Visibility="Collapsed"
+              Background="#99000000">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock Text="&#x1F513;" FontSize="36" HorizontalAlignment="Center"/>
+                <TextBlock Text="Decrypting..." Foreground="#CDD6F4" FontSize="16"
+                           FontWeight="Medium" HorizontalAlignment="Center" Margin="0,10,0,0"/>
+            </StackPanel>
+        </Grid>
+        <Grid Grid.Column="1" x:Name="LoadingOverlayEncrypt" Visibility="Collapsed"
+              Background="#99000000">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock Text="&#x1F510;" FontSize="36" HorizontalAlignment="Center"/>
+                <TextBlock Text="Encrypting..." Foreground="#CDD6F4" FontSize="16"
+                           FontWeight="Medium" HorizontalAlignment="Center" Margin="0,10,0,0"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>
