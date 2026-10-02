@@ -18,11 +18,11 @@ Scope: key storage, passphrase handling, dependencies, file handling. Method: co
 | 10 | Info | Exported private keys are plain armored files (passphrase-protected key material). Export requires re-entering the passphrase and a warning dialog. | Accepted, by design. |
 | 11 | Info | Signature verification: a *signed message from an unknown sender* is reported as "not checked", never as valid. A wrong sender key reports **invalid**. | By design; covered by tests. |
 | 12 | Info | The EXE and installer are not code-signed (SmartScreen warning). | Open (needs a certificate). |
-| 13 | Info | PgpCore 6.5.0 → 8.0.0 is available (major). Not upgraded blindly: API changes need their own change + test run. | Open, tracked by Dependabot. |
+| 13 | Info | PgpCore upgraded 6.5.0 → 8.0.0 (all 59 tests pass; API unchanged for our usage). | Done. |
 
 ## Dependencies
 
-`dotnet list package --vulnerable --include-transitive`: **no known vulnerabilities** (PgpCore 6.5.0, BouncyCastle.Cryptography 2.4.0). CI fails the build if a vulnerable package appears, and Dependabot proposes NuGet and GitHub Actions updates weekly.
+`dotnet list package --vulnerable --include-transitive`: **no known vulnerabilities** (PgpCore 8.0.0). CI fails the build if a vulnerable package appears, and Dependabot proposes NuGet and GitHub Actions updates weekly.
 
 ## Storage model
 
