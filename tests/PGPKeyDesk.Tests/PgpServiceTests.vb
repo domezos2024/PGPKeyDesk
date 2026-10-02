@@ -169,4 +169,48 @@ Public Class PgpServiceTests
         File.WriteAllBytes(P("t.pgp"), bytes)
         Assert.That(Await PgpService.VerifyFileAsync(P("t.pgp"), TestKeys.Alice.Public_), [Is].False)
     End Function
+
+    <Test>
+    Public Async Function File_WrongPassphrase_KeepsExistingOutputUntouched() As Task
+        File.WriteAllBytes(P("k"), Binary)
+        Await PgpService.EncryptFileAsync(P("k"), P("k.pgp"), TestKeys.Bob.Public_)
+        File.WriteAllText(P("k.out"), "precious")
+        Try
+            Await PgpService.DecryptFileAsync(P("k.pgp"), P("k.out"), TestKeys.Bob.Private_, "wrong")
+        Catch
+        End Try
+        Assert.That(File.ReadAllText(P("k.out")), [Is].EqualTo("precious"))
+    End Function
+
+    <Test>
+    Public Async Function File_Failure_LeavesNoOutputOrTempFiles() As Task
+        File.WriteAllBytes(P("n"), Binary)
+        Await PgpService.EncryptFileAsync(P("n"), P("n.pgp"), TestKeys.Bob.Public_)
+        Try
+            Await PgpService.DecryptFileAsync(P("n.pgp"), P("n.out"), TestKeys.Bob.Private_, "wrong")
+        Catch
+        End Try
+        Assert.That(File.Exists(P("n.out")), [Is].False)
+        Assert.That(Directory.GetFiles(_dir, "*.tmp*"), [Is].Empty)
+    End Function
+
+    <Test>
+    Public Async Function File_Decrypt_WithWrongSender_StillWritesPlaintext() As Task
+        File.WriteAllBytes(P("m"), Binary)
+        Await PgpService.EncryptFileAsync(P("m"), P("m.pgp"), TestKeys.Bob.Public_, TestKeys.Alice.Private_, TestKeys.Alice.Passphrase)
+        Dim st = Await PgpService.DecryptFileAsync(P("m.pgp"), P("m.out"), TestKeys.Bob.Private_, TestKeys.Bob.Passphrase, TestKeys.Eve.Public_)
+        Assert.That(st, [Is].EqualTo(SignatureStatus.Invalid))
+        Assert.That(File.ReadAllBytes(P("m.out")), [Is].EqualTo(Binary))
+    End Function
+
+    <Test>
+    Public Sub CheckRecipient_ParsedOverload_MatchesTextOverload()
+        Dim now = DateTime.UtcNow
+        For Each keyText In {TestKeys.Bob.Public_, "garbage"}
+            Dim a = PgpService.CheckRecipientKey(keyText, now)
+            Dim b = PgpService.CheckRecipientKey(KeyValidator.ValidatePublicKey(keyText), now)
+            Assert.That(b.Level, [Is].EqualTo(a.Level))
+            Assert.That(b.Message, [Is].EqualTo(a.Message))
+        Next
+    End Sub
 End Class

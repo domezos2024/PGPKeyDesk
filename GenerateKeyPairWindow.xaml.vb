@@ -56,24 +56,28 @@ Class GenerateKeyPairWindow
         BtnSave.IsEnabled = False
 
         Try
-            Dim pgp As New PGP()
-            Using pubStream As New MemoryStream()
-                Using privStream As New MemoryStream()
-                    Await pgp.GenerateKeyAsync(pubStream, privStream, identity, passphrase, strength)
-                    _generatedPublicKey = Encoding.UTF8.GetString(pubStream.ToArray())
-                    _generatedPrivateKey = Encoding.UTF8.GetString(privStream.ToArray())
-                End Using
-            End Using
+            ' RSA key generation takes seconds (4096 bit): keep it off the UI thread.
+            Dim keys = Await Task.Run(
+                Function()
+                    Using pgp As New PGP()
+                        Using pubStream As New MemoryStream(), privStream As New MemoryStream()
+                            pgp.GenerateKey(pubStream, privStream, identity, passphrase, strength)
+                            Return (Encoding.UTF8.GetString(pubStream.ToArray()), Encoding.UTF8.GetString(privStream.ToArray()))
+                        End Using
+                    End Using
+                End Function)
+            _generatedPublicKey = keys.Item1
+            _generatedPrivateKey = keys.Item2
 
             TxtPublicKeyResult.Text = _generatedPublicKey
             TxtPrivateKeyResult.Text = _generatedPrivateKey
             ResultPanel.Visibility = Visibility.Visible
             BtnSave.IsEnabled = True
-            BtnGenerate.Content = "&#x2699;  Generate Again"
+            BtnGenerate.Content = ChrW(&H2699) & "  Generate Again"
         Catch ex As Exception
             MessageBox.Show("Error generating key pair:" & Environment.NewLine & ex.Message,
                             "Error", MessageBoxButton.OK, MessageBoxImage.Error)
-            BtnGenerate.Content = "&#x2699;  Generate Key Pair"
+            BtnGenerate.Content = ChrW(&H2699) & "  Generate Key Pair"
         Finally
             BtnGenerate.IsEnabled = True
         End Try
@@ -96,6 +100,11 @@ Class GenerateKeyPairWindow
     End Sub
 
     Private Sub BtnExportPrivateKey_Click(sender As Object, e As RoutedEventArgs)
+        If String.IsNullOrEmpty(_generatedPrivateKey) Then Return
+        If MessageBox.Show("You are about to export your PRIVATE KEY." & vbCrLf & vbCrLf &
+                           "Store the file in a secure location and never share it." & vbCrLf & vbCrLf &
+                           "Continue with the export?", "Security Warning — Export Private Key",
+                           MessageBoxButton.YesNo, MessageBoxImage.Warning) <> MessageBoxResult.Yes Then Return
         ExportKeyToFile(_generatedPrivateKey, "Export Private Key", "private_key.asc")
     End Sub
 

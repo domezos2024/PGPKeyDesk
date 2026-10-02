@@ -23,7 +23,10 @@ Class KeyringWindow
 
     ''' <summary>One-line description (name, fingerprint, expiry) for list entries, shared with the main window.</summary>
     Public Shared Function Describe(k As RecipientKey, nowUtc As DateTime) As String
-        Dim v = KeyValidator.ValidatePublicKey(k.PublicKey)
+        Return Describe(k, KeyValidator.ValidatePublicKey(k.PublicKey), nowUtc)
+    End Function
+
+    Private Shared Function Describe(k As RecipientKey, v As KeyValidationResult, nowUtc As DateTime) As String
         Dim fp = If(k.Fingerprint.Length >= 16, k.Fingerprint.Substring(k.Fingerprint.Length - 16), k.Fingerprint)
         Dim expiry = If(v.IsValid, KeyExpiry.Describe(v.ExpiresAtUtc, nowUtc), "unreadable key")
         If v.IsValid AndAlso v.IsRevoked Then expiry = "REVOKED"
@@ -34,8 +37,8 @@ Class KeyringWindow
         Dim now = DateTime.UtcNow
         KeyList.Items.Clear()
         For Each k In RecipientKeyring.Default.Keys
-            Dim item As New ListBoxItem() With {.Content = Describe(k, now), .Tag = k}
             Dim v = KeyValidator.ValidatePublicKey(k.PublicKey)
+            Dim item As New ListBoxItem() With {.Content = Describe(k, v, now), .Tag = k}
             Dim st = If(v.IsValid, v.GetExpiryStatus(now), KeyExpiryStatus.Expired)
             If (v.IsValid AndAlso v.IsRevoked) OrElse st = KeyExpiryStatus.Expired Then
                 item.Foreground = Brush("#F38BA8")
@@ -49,7 +52,7 @@ Class KeyringWindow
     End Sub
 
     Private Shared Function Brush(hex As String) As SolidColorBrush
-        Return New SolidColorBrush(CType(ColorConverter.ConvertFromString(hex), Color))
+        Return UiBrushes.FromHex(hex)
     End Function
 
     Private Sub ShowMessage(text As String, colorHex As String)
