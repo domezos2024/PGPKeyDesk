@@ -1,4 +1,4 @@
-# Build-Ausgaben
+# Build output
 bin/
 obj/
 publish/
@@ -15,11 +15,13 @@ artifacts/
 *.userprefs
 *.DotSettings.user
 
-# Lokale Claude-/KI-Agent-Einstellungen (enthalten lokale Pfade/Berechtigungen)
-.claude/settings.local.json
+# Local AI-agent files (working instructions, memory, skills - not part of the project)
+.claude/
+memory/
+CLAUDE.md
 AGENTS.md
 
-# Secrets & Schluessel - niemals committen
+# Secrets & keys - never commit
 *.asc
 *.gpg
 *.pgp
@@ -33,7 +35,7 @@ profiles.json
 .env.*
 secrets.*
 
-# OS-Dateien
+# OS files
 Thumbs.db
 .DS_Store
 desktop.ini
