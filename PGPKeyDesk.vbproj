@@ -8,7 +8,7 @@
     <Platforms>AnyCPU;x64</Platforms>
     <ApplicationIcon>app.ico</ApplicationIcon>
     <AssemblyName>PGPKeyDesk</AssemblyName>
-    <Version>1.0.0</Version>
+    <Version>2.0.1</Version>
     <Product>PGPKeyDesk</Product>
     <Description>PGP-Schluesselprofile verwalten sowie Nachrichten ver- und entschluesseln</Description>
   </PropertyGroup>
