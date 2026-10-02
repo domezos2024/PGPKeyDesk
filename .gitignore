@@ -42,3 +42,6 @@ desktop.ini
 
 # Installer build output
 installer/Output/
+
+# Personal signing roadmap (local only)
+docs/SIGNING-TODO.md
