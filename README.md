@@ -4,6 +4,8 @@
 
 # PGPKeyDesk
 
+[![Release](https://img.shields.io/github/v/release/domezos2024/PGPKeyDesk)](../../releases/latest) [![Lizenz: MIT](https://img.shields.io/badge/Lizenz-MIT-green.svg)](LICENSE)
+
 Schlanke Windows-Desktop-Anwendung (WPF, VB.NET, .NET 10) zum Verwalten von **OpenPGP-Schlüsselprofilen** sowie zum **Ver- und Entschlüsseln von PGP-Nachrichten** – ohne GnuPG-Installation. Die Kryptografie übernimmt [PgpCore](https://github.com/mattosaurus/PgpCore) (BouncyCastle).
 
 > Die Programmoberfläche ist derzeit englisch, die Dokumentation deutsch.
@@ -16,6 +18,12 @@ Schlanke Windows-Desktop-Anwendung (WPF, VB.NET, .NET 10) zum Verwalten von **Op
 - **Verschlüsseln:** Public Key des Empfängers einfügen oder importieren, Text verschlüsseln und kopieren; ist ein Profil gewählt, wird zusätzlich mit dessen privatem Schlüssel **signiert** (Passphrase erforderlich)
 - **Schlüssel-Validierung** beim Import (Format und Vorhandensein eines Master-Keys)
 - Dunkles Design, Tastatur: `Strg+Enter` führt die Aktion des aktiven Tabs aus
+
+## Änderungen in 2.0.1
+
+- Umbenennung von „OpenGPG“ zu **PGPKeyDesk** (Profile aus der Vorgängerversion werden automatisch übernommen)
+- Self-contained Release für Windows x64 (keine .NET-Installation nötig)
+- MIT-Lizenz, README, überarbeitete `.gitignore`
 
 ## Installation (für jeden Nutzer, ohne Vorbedingungen)
 
@@ -71,4 +79,4 @@ dotnet publish PGPKeyDesk.vbproj -c Release -r win-x64 --self-contained true -o 
 
 ## Lizenz
 
-Noch nicht festgelegt – siehe Repository-Hinweis. Ohne Lizenzdatei gelten die gesetzlichen Standardrechte des Urhebers.
+[MIT License](LICENSE) © 2026 Michael Bergfeld. Enthaltene Drittkomponenten ([PgpCore](https://github.com/mattosaurus/PgpCore), [BouncyCastle](https://www.bouncycastle.org/)) stehen unter ihren eigenen Lizenzen (beide MIT-kompatibel).
