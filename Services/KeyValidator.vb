@@ -8,6 +8,17 @@ Namespace Services
         Public Property IsValid As Boolean
         Public Property ErrorMessage As String = String.Empty
         Public Property KeyInfo As String = String.Empty
+        Public Property Fingerprint As String = String.Empty
+        Public Property UserId As String = String.Empty
+        ''' <summary>UTC time at which the key (or its only encryption key) expires; Nothing = never.</summary>
+        Public Property ExpiresAtUtc As DateTime?
+        Public Property IsRevoked As Boolean
+        ''' <summary>Public keys only: False if no usable (non-revoked) encryption key exists.</summary>
+        Public Property HasEncryptionKey As Boolean = True
+
+        Public Function GetExpiryStatus(nowUtc As DateTime) As KeyExpiryStatus
+            Return KeyExpiry.Evaluate(ExpiresAtUtc, nowUtc)
+        End Function
     End Class
 
     Public Class KeyValidator
@@ -15,7 +26,7 @@ Namespace Services
         Public Shared Function ValidatePrivateKey(keyText As String) As KeyValidationResult
             Dim result As New KeyValidationResult()
 
-            If Not keyText.Contains("-----BEGIN PGP PRIVATE KEY BLOCK-----") Then
+            If keyText Is Nothing OrElse Not keyText.Contains("-----BEGIN PGP PRIVATE KEY BLOCK-----") Then
                 result.IsValid = False
                 result.ErrorMessage = "Missing -----BEGIN PGP PRIVATE KEY BLOCK----- header."
                 Return result
@@ -43,7 +54,8 @@ Namespace Services
                     End If
 
                     result.IsValid = True
-                    result.KeyInfo = BuildKeyInfo(masterKey.PublicKey)
+                    FillDetails(result, masterKey.PublicKey)
+                    result.ExpiresAtUtc = ExpiryOf(masterKey.PublicKey)
                 End Using
             Catch ex As Exception
                 result.IsValid = False
@@ -56,7 +68,7 @@ Namespace Services
         Public Shared Function ValidatePublicKey(keyText As String) As KeyValidationResult
             Dim result As New KeyValidationResult()
 
-            If Not keyText.Contains("-----BEGIN PGP PUBLIC KEY BLOCK-----") Then
+            If keyText Is Nothing OrElse Not keyText.Contains("-----BEGIN PGP PUBLIC KEY BLOCK-----") Then
                 result.IsValid = False
                 result.ErrorMessage = "Missing -----BEGIN PGP PUBLIC KEY BLOCK----- header."
                 Return result
@@ -66,11 +78,13 @@ Namespace Services
                 Using stream = PgpUtilities.GetDecoderStream(New MemoryStream(Encoding.UTF8.GetBytes(keyText)))
                     Dim bundle As New PgpPublicKeyRingBundle(stream)
                     Dim masterKey As PgpPublicKey = Nothing
+                    Dim masterRing As PgpPublicKeyRing = Nothing
 
                     For Each ring As PgpPublicKeyRing In bundle.GetKeyRings()
                         For Each key As PgpPublicKey In ring.GetPublicKeys()
                             If key.IsMasterKey Then
                                 masterKey = key
+                                masterRing = ring
                                 Exit For
                             End If
                         Next
@@ -84,7 +98,8 @@ Namespace Services
                     End If
 
                     result.IsValid = True
-                    result.KeyInfo = BuildKeyInfo(masterKey)
+                    FillDetails(result, masterKey)
+                    FillEncryptionExpiry(result, masterKey, masterRing)
                 End Using
             Catch ex As Exception
                 result.IsValid = False
@@ -93,6 +108,47 @@ Namespace Services
 
             Return result
         End Function
+
+        Private Shared Sub FillDetails(result As KeyValidationResult, pubKey As PgpPublicKey)
+            result.KeyInfo = BuildKeyInfo(pubKey)
+            result.Fingerprint = Org.BouncyCastle.Utilities.Encoders.Hex.ToHexString(pubKey.GetFingerprint()).ToUpperInvariant()
+            result.IsRevoked = pubKey.IsRevoked()
+            For Each uid As Object In pubKey.GetUserIds()
+                result.UserId = uid.ToString()
+                Exit For
+            Next
+        End Sub
+
+        Private Shared Function ExpiryOf(key As PgpPublicKey) As DateTime?
+            Dim seconds = key.GetValidSeconds()
+            If seconds <= 0 Then Return Nothing
+            Return DateTime.SpecifyKind(key.CreationTime, DateTimeKind.Utc).AddSeconds(seconds)
+        End Function
+
+        ''' <summary>
+        ''' Effective expiry for encrypting: the master key must be valid AND at least one
+        ''' non-revoked encryption key must be valid (latest encryption-key expiry counts).
+        ''' </summary>
+        Private Shared Sub FillEncryptionExpiry(result As KeyValidationResult, master As PgpPublicKey, ring As PgpPublicKeyRing)
+            Dim encExpiry As DateTime? = Nothing
+            Dim found As Boolean = False
+            Dim neverExpires As Boolean = False
+
+            For Each key As PgpPublicKey In ring.GetPublicKeys()
+                If Not key.IsEncryptionKey OrElse key.IsRevoked() Then Continue For
+                found = True
+                Dim e = ExpiryOf(key)
+                If Not e.HasValue Then
+                    neverExpires = True
+                ElseIf Not encExpiry.HasValue OrElse e.Value > encExpiry.Value Then
+                    encExpiry = e
+                End If
+            Next
+
+            result.HasEncryptionKey = found
+            If neverExpires Then encExpiry = Nothing
+            result.ExpiresAtUtc = KeyExpiry.Earliest(ExpiryOf(master), If(found, encExpiry, Nothing))
+        End Sub
 
         Private Shared Function BuildKeyInfo(pubKey As PgpPublicKey) As String
             Dim parts As New List(Of String)()

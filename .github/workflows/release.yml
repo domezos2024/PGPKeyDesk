@@ -1,0 +1,160 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release, e.g. 2.0.1 (must match <Version> in PGPKeyDesk.vbproj)'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  test:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore
+        run: dotnet restore PGPKeyDesk.slnx
+
+      - name: Build
+        run: dotnet build PGPKeyDesk.slnx -c Release --no-restore
+
+      - name: Test
+        run: >
+          dotnet test tests/PGPKeyDesk.Tests/PGPKeyDesk.Tests.vbproj -c Release --no-build
+          --logger "trx;LogFileName=test-results.trx"
+          --results-directory TestResults
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-test-results
+          path: TestResults/*.trx
+          if-no-files-found: warn
+
+  release:
+    needs: test
+    runs-on: windows-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Verify requested version matches project version
+        id: ver
+        shell: pwsh
+        run: |
+          if ('${{ github.event_name }}' -eq 'workflow_dispatch') {
+            $requested = '${{ inputs.version }}'
+          } else {
+            $requested = '${{ github.ref_name }}'
+          }
+          $requested = $requested.Trim() -replace '^v', ''
+          [xml]$proj = Get-Content PGPKeyDesk.vbproj
+          $projectVersion = ($proj.Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1).Trim()
+          if (-not $projectVersion) { Write-Error 'No <Version> found in PGPKeyDesk.vbproj'; exit 1 }
+          if ($requested -ne $projectVersion) {
+            Write-Error "Version mismatch: requested '$requested' but PGPKeyDesk.vbproj has '$projectVersion'."
+            exit 1
+          }
+          "version=$projectVersion" >> $env:GITHUB_OUTPUT
+
+      - name: Publish (self-contained win-x64)
+        run: dotnet publish PGPKeyDesk.vbproj -c Release -r win-x64 --self-contained true -o publish
+
+      - name: Create ZIP and SHA-256
+        id: pkg
+        shell: pwsh
+        run: |
+          $zip = "PGPKeyDesk-${{ steps.ver.outputs.version }}-win-x64.zip"
+          Compress-Archive -Path "publish/*" -DestinationPath $zip -Force
+          $hash = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          [System.IO.File]::WriteAllText("$PWD/$zip.sha256", "$hash  $zip`n", (New-Object System.Text.UTF8Encoding($false)))
+          "zip=$zip" >> $env:GITHUB_OUTPUT
+          "sha256=$hash" >> $env:GITHUB_OUTPUT
+
+      - name: Build installer (Inno Setup)
+        id: inst
+        shell: pwsh
+        run: |
+          choco install innosetup -y --no-progress
+          if ($LASTEXITCODE -ne 0) { Write-Error 'choco install innosetup failed'; exit 1 }
+          $env:PATH += ";${env:ProgramFiles(x86)}\Inno Setup 6;$env:ProgramFiles\Inno Setup 6"
+          ./installer/build-installer.ps1 -SkipPublish -PublishDir publish
+          $setup = "PGPKeyDesk-${{ steps.ver.outputs.version }}-win-x64-setup.exe"
+          foreach ($f in @("installer/Output/$setup", "installer/Output/$setup.sha256")) {
+            if (-not (Test-Path $f)) { Write-Error "Missing expected installer artifact: $f"; exit 1 }
+          }
+          "setup=$setup" >> $env:GITHUB_OUTPUT
+
+      - name: Installer smoke test (silent install / uninstall)
+        shell: pwsh
+        run: |
+          $setup = (Resolve-Path "installer/Output/${{ steps.inst.outputs.setup }}").Path
+          $dir = Join-Path $env:RUNNER_TEMP 'pgpkd-smoke'
+          $p = Start-Process $setup -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/CURRENTUSER',"/DIR=""$dir""" -Wait -PassThru
+          if ($p.ExitCode -ne 0) { Write-Error "Install failed: $($p.ExitCode)"; exit 1 }
+          if (-not (Test-Path "$dir\PGPKeyDesk.exe")) { Write-Error 'PGPKeyDesk.exe missing after install'; exit 1 }
+          $u = Start-Process "$dir\unins000.exe" -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART' -Wait -PassThru
+          if ($u.ExitCode -ne 0) { Write-Error "Uninstall failed: $($u.ExitCode)"; exit 1 }
+          Start-Sleep -Seconds 3
+          if (Test-Path "$dir\PGPKeyDesk.exe") { Write-Error 'PGPKeyDesk.exe still present after uninstall'; exit 1 }
+
+      - name: Create GitHub Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $version = '${{ steps.ver.outputs.version }}'
+          $tag = "v$version"
+          $zip = '${{ steps.pkg.outputs.zip }}'
+          $hash = '${{ steps.pkg.outputs.sha256 }}'
+          $setup = '${{ steps.inst.outputs.setup }}'
+          $setupHash = (Get-FileHash "installer/Output/$setup" -Algorithm SHA256).Hash.ToLowerInvariant()
+          $notesFile = Join-Path $PWD 'release-notes.md'
+          $notes = @"
+          ## PGPKeyDesk $version (Windows x64, self-contained)
+
+          **SHA-256** of ``$zip``:
+
+          ``````
+          $hash
+          ``````
+
+          Verify: ``Get-FileHash .\$zip -Algorithm SHA256``
+
+          **Installer** ``$setup`` SHA-256: ``$setupHash``
+          "@
+          Set-Content -Path $notesFile -Value $notes -Encoding utf8
+          gh release create $tag $zip "$zip.sha256" "installer/Output/$setup" "installer/Output/$setup.sha256" `
+            --repo '${{ github.repository }}' `
+            --target '${{ github.sha }}' `
+            --title "PGPKeyDesk $version" `
+            --notes-file $notesFile `
+            --generate-notes
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

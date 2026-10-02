@@ -17,7 +17,16 @@ A lightweight Windows desktop application (WPF, VB.NET, .NET 10) for managing **
 - **Decrypt:** paste a PGP message or open it from a file, enter the passphrase, copy the plaintext
 - **Encrypt:** paste or import the recipient's public key, encrypt and copy the text; if a profile is selected, the message is additionally **signed** with its private key (passphrase required)
 - **Key validation** on import (format and presence of a master key)
+- **Recipient keyring** with fingerprints and **key expiry warnings** (expired/revoked keys are blocked, keys expiring within 30 days are flagged)
+- **File encryption/decryption**, **signing** and **signature verification** (messages and files; pick the sender key from the keyring)
+- See [docs/SECURITY-AUDIT.md](docs/SECURITY-AUDIT.md) for the security review
 - Dark theme; keyboard: `Ctrl+Enter` runs the action of the active tab
+
+## Changes in 2.1.0
+
+- Recipient keyring, key expiry warnings, file encryption, signature verification
+- Security fixes (data loss when loading a damaged profile file, atomic saves, clipboard clearing)
+- Unit tests, GitHub Actions (build/test/release), Windows installer
 
 ## Changes in 2.0.1
 
@@ -40,6 +49,10 @@ Get-FileHash .\PGPKeyDesk-<Version>-win-x64.zip -Algorithm SHA256
 ```
 
 > Note: The EXE is not code-signed, so Windows SmartScreen may show a warning on first launch ("More info" → "Run anyway").
+
+## Installer
+
+Alternatively download **`PGPKeyDesk-<Version>-win-x64-setup.exe`** (Inno Setup, Windows 10 1809+ x64, English/German). It installs per user or per machine, creates a Start-menu shortcut (optional desktop shortcut), and offers an unchecked "Open with" registration for `.asc`/`.pgp`/`.gpg` (the app does not take a file argument yet). Uninstalling asks, default **No**, whether to delete `%AppData%\PGPKeyDesk`; upgrades keep your data. Silent install: `setup.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /TASKS="desktopicon"`. Verify with the `.sha256` file. Details and build instructions: [installer/README.md](installer/README.md).
 
 ## Building from source
 
