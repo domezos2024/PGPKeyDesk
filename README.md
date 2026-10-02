@@ -4,46 +4,46 @@
 
 # PGPKeyDesk
 
-[![Release](https://img.shields.io/github/v/release/domezos2024/PGPKeyDesk)](../../releases/latest) [![Lizenz: MIT](https://img.shields.io/badge/Lizenz-MIT-green.svg)](LICENSE)
+**English** | [Deutsch](README.de.md)
 
-Schlanke Windows-Desktop-Anwendung (WPF, VB.NET, .NET 10) zum Verwalten von **OpenPGP-Schlüsselprofilen** sowie zum **Ver- und Entschlüsseln von PGP-Nachrichten** – ohne GnuPG-Installation. Die Kryptografie übernimmt [PgpCore](https://github.com/mattosaurus/PgpCore) (BouncyCastle).
+[![Release](https://img.shields.io/github/v/release/domezos2024/PGPKeyDesk)](../../releases/latest) [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-> Die Programmoberfläche ist derzeit englisch, die Dokumentation deutsch.
+A lightweight Windows desktop application (WPF, VB.NET, .NET 10) for managing **OpenPGP key profiles** and for **encrypting and decrypting PGP messages** – no GnuPG installation required. Cryptography is provided by [PgpCore](https://github.com/mattosaurus/PgpCore) (BouncyCastle).
 
-## Funktionen
+## Features
 
-- **Profile verwalten:** Private-/Public-Key-Paare als Profile hinzufügen, auswählen und entfernen
-- **Schlüsselpaar erzeugen:** RSA 2048 / 4096 Bit mit Passphrase, Export als `.asc`
-- **Entschlüsseln:** PGP-Nachricht einfügen oder aus Datei öffnen, Passphrase eingeben, Klartext kopieren
-- **Verschlüsseln:** Public Key des Empfängers einfügen oder importieren, Text verschlüsseln und kopieren; ist ein Profil gewählt, wird zusätzlich mit dessen privatem Schlüssel **signiert** (Passphrase erforderlich)
-- **Schlüssel-Validierung** beim Import (Format und Vorhandensein eines Master-Keys)
-- Dunkles Design, Tastatur: `Strg+Enter` führt die Aktion des aktiven Tabs aus
+- **Manage profiles:** add, select and remove private/public key pairs as profiles
+- **Generate key pairs:** RSA 2048 / 4096 bit with passphrase, export as `.asc`
+- **Decrypt:** paste a PGP message or open it from a file, enter the passphrase, copy the plaintext
+- **Encrypt:** paste or import the recipient's public key, encrypt and copy the text; if a profile is selected, the message is additionally **signed** with its private key (passphrase required)
+- **Key validation** on import (format and presence of a master key)
+- Dark theme; keyboard: `Ctrl+Enter` runs the action of the active tab
 
-## Änderungen in 2.0.1
+## Changes in 2.0.1
 
-- Umbenennung von „OpenGPG“ zu **PGPKeyDesk** (Profile aus der Vorgängerversion werden automatisch übernommen)
-- Self-contained Release für Windows x64 (keine .NET-Installation nötig)
-- MIT-Lizenz, README, überarbeitete `.gitignore`
+- Renamed from "OpenGPG" to **PGPKeyDesk** (profiles from the previous version are migrated automatically)
+- Self-contained release for Windows x64 (no .NET installation required)
+- MIT license, README, revised `.gitignore`
 
-## Installation (für jeden Nutzer, ohne Vorbedingungen)
+## Installation (for every user, no prerequisites)
 
-1. Auf der Seite [Releases](../../releases/latest) die Datei **`PGPKeyDesk-<Version>-win-x64.zip`** herunterladen.
-2. ZIP entpacken (z. B. nach `C:\Tools\PGPKeyDesk`).
-3. `PGPKeyDesk.exe` starten.
+1. On the [Releases](../../releases/latest) page, download **`PGPKeyDesk-<Version>-win-x64.zip`**.
+2. Extract the ZIP (e.g. to `C:\Tools\PGPKeyDesk`).
+3. Start `PGPKeyDesk.exe`.
 
-Das Release ist **self-contained**: Es bringt die .NET-Laufzeit mit. Es müssen weder .NET, GnuPG noch sonstige Software installiert werden. Voraussetzung: **Windows 10 (1809) oder neuer, 64 Bit**.
+The release is **self-contained**: it ships with the .NET runtime. Neither .NET, GnuPG nor any other software needs to be installed. Requirement: **Windows 10 (1809) or newer, 64-bit**.
 
-Prüfsumme (SHA-256) steht in den Release-Notes bzw. in `PGPKeyDesk-<Version>-win-x64.zip.sha256`:
+The SHA-256 checksum is listed in the release notes and in `PGPKeyDesk-<Version>-win-x64.zip.sha256`:
 
 ```powershell
 Get-FileHash .\PGPKeyDesk-<Version>-win-x64.zip -Algorithm SHA256
 ```
 
-> Hinweis: Die EXE ist nicht code-signiert. Windows SmartScreen kann daher beim ersten Start warnen („Weitere Informationen“ → „Trotzdem ausführen“).
+> Note: The EXE is not code-signed, so Windows SmartScreen may show a warning on first launch ("More info" → "Run anyway").
 
-## Aus dem Quellcode bauen
+## Building from source
 
-Voraussetzungen: [.NET 10 SDK](https://dotnet.microsoft.com/download) unter Windows.
+Requirements: [.NET 10 SDK](https://dotnet.microsoft.com/download) on Windows.
 
 ```powershell
 git clone https://github.com/domezos2024/PGPKeyDesk.git
@@ -51,32 +51,32 @@ cd PGPKeyDesk
 dotnet run -c Release --project PGPKeyDesk.vbproj
 ```
 
-Eigenständiges Paket erzeugen (wie im Release):
+Create a self-contained package (as in the release):
 
 ```powershell
 dotnet publish PGPKeyDesk.vbproj -c Release -r win-x64 --self-contained true -o publish
 ```
 
-## Sicherheit & Datenspeicherung
+## Security & data storage
 
-- Profile liegen in `%AppData%\PGPKeyDesk\profiles.json` (Profile der früheren Version „OpenGPG“ aus `%AppData%\OpenGPG` werden automatisch übernommen) und sind mit **Windows DPAPI** (`DataProtectionScope.CurrentUser`) verschlüsselt: lesbar nur für denselben Windows-Benutzer auf demselben Rechner. Für ein Backup die Schlüssel daher über **Export** sichern.
-- **Passphrasen werden nie gespeichert**, sie existieren nur während der jeweiligen Operation im Speicher.
-- Der Export privater Schlüssel erfolgt im Klartext (armored, weiterhin passphrase-geschützt) – sicher aufbewahren.
-- Die Anwendung baut keine Netzwerkverbindungen auf und sendet keine Telemetrie.
-- Dies ist kein auditiertes Produkt. Für hochkritische Anwendungsfälle bitte etablierte Werkzeuge (z. B. GnuPG) verwenden. Sicherheitslücken bitte vertraulich über GitHub „Security → Report a vulnerability“ melden.
+- Profiles are stored in `%AppData%\PGPKeyDesk\profiles.json` (profiles from the earlier "OpenGPG" version in `%AppData%\OpenGPG` are migrated automatically) and encrypted with **Windows DPAPI** (`DataProtectionScope.CurrentUser`): readable only by the same Windows user on the same machine. For backups, use **Export** to save your keys.
+- **Passphrases are never stored**; they exist in memory only for the duration of the respective operation.
+- Private keys are exported in plain text (armored, still passphrase-protected) – keep them safe.
+- The application makes no network connections and sends no telemetry.
+- This is not an audited product. For highly critical use cases, please use established tools (e.g. GnuPG). Please report vulnerabilities privately via GitHub "Security → Report a vulnerability".
 
-## Projektstruktur
+## Project structure
 
-| Pfad | Inhalt |
-|------|--------|
-| `MainWindow.xaml(.vb)` | Hauptfenster: Profile, Entschlüsseln, Verschlüsseln |
-| `GenerateKeyPairWindow.xaml(.vb)` | Schlüsselpaar-Generator |
-| `AddProfileWindow.xaml(.vb)` | Profil importieren |
-| `PassphraseDialog.xaml(.vb)` | Passphrase-Abfrage |
-| `Services/` | `ProfileStore` (DPAPI-Speicher), `KeyValidator` |
+| Path | Contents |
+|------|----------|
+| `MainWindow.xaml(.vb)` | Main window: profiles, decrypt, encrypt |
+| `GenerateKeyPairWindow.xaml(.vb)` | Key pair generator |
+| `AddProfileWindow.xaml(.vb)` | Import a profile |
+| `PassphraseDialog.xaml(.vb)` | Passphrase prompt |
+| `Services/` | `ProfileStore` (DPAPI storage), `KeyValidator` |
 | `Models/` | `PGPProfile` |
-| `Themes/` | Farben und Control-Styles |
+| `Themes/` | Colors and control styles |
 
-## Lizenz
+## License
 
-[MIT License](LICENSE) © 2026 Michael Bergfeld. Enthaltene Drittkomponenten ([PgpCore](https://github.com/mattosaurus/PgpCore), [BouncyCastle](https://www.bouncycastle.org/)) stehen unter ihren eigenen Lizenzen (beide MIT-kompatibel).
+[MIT License](LICENSE) © 2026 Michael Bergfeld. Bundled third-party components ([PgpCore](https://github.com/mattosaurus/PgpCore), [BouncyCastle](https://www.bouncycastle.org/)) are under their own licenses (both MIT-compatible).
