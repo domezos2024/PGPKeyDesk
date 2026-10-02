@@ -2,17 +2,26 @@ Imports System.IO
 Imports System.Security.Cryptography
 Imports System.Text
 Imports System.Text.Json
-Imports OpenGPG.Models
+Imports PGPKeyDesk.Models
 
 Namespace Services
     Public Class ProfileStore
         Private Shared ReadOnly StorePath As String = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "PGPKeyDesk", "profiles.json")
+
+        ' Bis Version 1.0 hiess die Anwendung "OpenGPG"; vorhandene Profile werden uebernommen.
+        Private Shared ReadOnly LegacyStorePath As String = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
             "OpenGPG", "profiles.json")
 
         Public Shared Function Load() As List(Of PGPProfile)
             Try
-                If Not File.Exists(StorePath) Then Return New List(Of PGPProfile)
+                If Not File.Exists(StorePath) Then
+                    If Not File.Exists(LegacyStorePath) Then Return New List(Of PGPProfile)
+                    Directory.CreateDirectory(Path.GetDirectoryName(StorePath))
+                    File.Copy(LegacyStorePath, StorePath)
+                End If
 
                 Dim fileBytes = File.ReadAllBytes(StorePath)
                 Dim json As String

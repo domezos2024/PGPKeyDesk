@@ -46,7 +46,7 @@ Beispiel JSON (profiles.json)
 }
 
 Speicherort & Persistenz
-- Desktop: Standardpfad %AppData%/OpenGPG/profiles.json (Windows) oder $XDG_CONFIG_HOME/OpenGPG/profiles.json (Linux) bzw. ~/Library/Application Support/OpenGPG/profiles.json (macOS).
+- Desktop: Standardpfad %AppData%/PGPKeyDesk/profiles.json (Windows) oder $XDG_CONFIG_HOME/PGPKeyDesk/profiles.json (Linux) bzw. ~/Library/Application Support/PGPKeyDesk/profiles.json (macOS).
 - Mobil: sichere, private App-Daten (Sandbox). Auf iOS Keychain/secure file, Android EncryptedSharedPreferences / File with MasterKey.
 - Anforderungen:
   - Verzeichnisse bei Bedarf anlegen

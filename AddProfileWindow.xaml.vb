@@ -1,5 +1,5 @@
-Imports OpenGPG.Models
-Imports OpenGPG.Services
+Imports PGPKeyDesk.Models
+Imports PGPKeyDesk.Services
 Imports Microsoft.Win32
 Imports System.Windows.Media
 

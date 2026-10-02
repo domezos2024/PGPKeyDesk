@@ -1,1 +1,1 @@
-- [OpenGPG UX Project State](project-opengpg-ux.md) — design tokens, fixed scroll/layout bugs, WPF StackPanel-in-star-row anti-pattern, Catppuccin theme
+- [PGPKeyDesk UX Project State](project-pgpkeydesk-ux.md) — design tokens, fixed scroll/layout bugs, WPF StackPanel-in-star-row anti-pattern, Catppuccin theme

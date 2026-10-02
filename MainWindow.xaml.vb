@@ -1,6 +1,6 @@
 Imports System.IO
-Imports OpenGPG.Models
-Imports OpenGPG.Services
+Imports PGPKeyDesk.Models
+Imports PGPKeyDesk.Services
 Imports PgpCore
 Imports Microsoft.Win32
 Imports System.Windows.Media

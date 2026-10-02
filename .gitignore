@@ -1,4 +1,39 @@
+# Build-Ausgaben
 bin/
 obj/
+publish/
+artifacts/
+*.nupkg
+*.snupkg
+
+# Visual Studio / Rider / VS Code
 .vs/
+.vscode/
+.idea/
 *.user
+*.suo
+*.userprefs
+*.DotSettings.user
+
+# Lokale Claude-/KI-Agent-Einstellungen (enthalten lokale Pfade/Berechtigungen)
+.claude/settings.local.json
+AGENTS.md
+
+# Secrets & Schluessel - niemals committen
+*.asc
+*.gpg
+*.pgp
+*.key
+*.pem
+*.pfx
+*.p12
+*.snk
+profiles.json
+.env
+.env.*
+secrets.*
+
+# OS-Dateien
+Thumbs.db
+.DS_Store
+desktop.ini
