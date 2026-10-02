@@ -47,7 +47,7 @@ Class FilesView
         If dlg.ShowDialog() = True Then
             _recipient = dlg.SelectedKey
             TxtRecipient.Text = KeyringWindow.Describe(_recipient, DateTime.UtcNow)
-            TxtRecipient.Foreground = New SolidColorBrush(CType(ColorConverter.ConvertFromString("#CDD6F4"), Color))
+            TxtRecipient.Foreground = UiBrushes.FromHex("#CDD6F4")
             UpdateButtons()
         End If
     End Sub
@@ -57,7 +57,7 @@ Class FilesView
         If dlg.ShowDialog() = True Then
             _sender = dlg.SelectedKey
             TxtSender.Text = _sender.Name
-            TxtSender.Foreground = New SolidColorBrush(CType(ColorConverter.ConvertFromString("#CDD6F4"), Color))
+            TxtSender.Foreground = UiBrushes.FromHex("#CDD6F4")
         End If
     End Sub
 
@@ -88,7 +88,7 @@ Class FilesView
 
     Private Sub ShowResult(text As String, colorHex As String)
         TxtFileResult.Text = text
-        TxtFileResult.Foreground = New SolidColorBrush(CType(ColorConverter.ConvertFromString(colorHex), Color))
+        TxtFileResult.Foreground = UiBrushes.FromHex(colorHex)
         RaiseEvent StatusChanged(text, colorHex)
     End Sub
 

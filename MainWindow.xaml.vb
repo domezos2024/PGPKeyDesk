@@ -168,14 +168,14 @@ Class MainWindow
             Dim res = Await PgpService.DecryptTextAsync(encryptedText, _selectedProfile.PrivateKey, passphrase, senderPub)
 
             TxtDecrypted.Text = res.Text
-            TxtDecrypted.Foreground = New SolidColorBrush(CType(ColorConverter.ConvertFromString("#A6E3A1"), Color))
+            TxtDecrypted.Foreground = UiBrushes.FromHex("#A6E3A1")
             BtnCopyResult.Visibility = Visibility.Visible
             PwdPassphrase.Clear()
             ShowSignatureResult(res.Signature)
         Catch ex As Exception
             TxtSignatureResult.Text = ""
             TxtDecrypted.Text = "ERROR: " & ex.Message
-            TxtDecrypted.Foreground = New SolidColorBrush(CType(ColorConverter.ConvertFromString("#F38BA8"), Color))
+            TxtDecrypted.Foreground = UiBrushes.FromHex("#F38BA8")
             BtnCopyResult.Visibility = Visibility.Collapsed
             SetStatus(GetFriendlyDecryptError(ex), "#F38BA8", "󰅙")
             Dim m = ex.Message.ToLower()
@@ -227,7 +227,7 @@ Class MainWindow
         _statusTimer?.Stop()
 
         TxtStatus.Text = message
-        TxtStatus.Foreground = New SolidColorBrush(CType(ColorConverter.ConvertFromString(colorHex), Color))
+        TxtStatus.Foreground = UiBrushes.FromHex(colorHex)
         TxtStatusIcon.Text = icon
         TxtStatusIcon.Foreground = TxtStatus.Foreground
 
@@ -238,7 +238,7 @@ Class MainWindow
                 AddHandler _statusTimer.Tick, Sub(s, ev)
                     _statusTimer.Stop()
                     TxtStatus.Text = "Ready"
-                    Dim readyBrush = New SolidColorBrush(CType(ColorConverter.ConvertFromString("#6C7086"), Color))
+                    Dim readyBrush = UiBrushes.FromHex("#6C7086")
                     TxtStatus.Foreground = readyBrush
                     TxtStatusIcon.Text = ""
                     TxtStatusIcon.Foreground = readyBrush
@@ -249,12 +249,12 @@ Class MainWindow
     End Sub
 
     Private Sub FlashPassphraseError()
-        PwdPassphrase.BorderBrush = New SolidColorBrush(CType(ColorConverter.ConvertFromString("#F38BA8"), Color))
+        PwdPassphrase.BorderBrush = UiBrushes.FromHex("#F38BA8")
         If _passphraseTimer Is Nothing Then
             _passphraseTimer = New DispatcherTimer() With {.Interval = TimeSpan.FromSeconds(1.5)}
             AddHandler _passphraseTimer.Tick, Sub(s, ev)
                 _passphraseTimer.Stop()
-                PwdPassphrase.BorderBrush = New SolidColorBrush(CType(ColorConverter.ConvertFromString("#45475A"), Color))
+                PwdPassphrase.BorderBrush = UiBrushes.FromHex("#45475A")
             End Sub
         End If
         _passphraseTimer.Stop()
@@ -263,7 +263,7 @@ Class MainWindow
 
     Private Sub ResetDecryptUI()
         TxtDecrypted.Text = "Decrypted content appears here..."
-        TxtDecrypted.Foreground = New SolidColorBrush(CType(ColorConverter.ConvertFromString("#45475A"), Color))
+        TxtDecrypted.Foreground = UiBrushes.FromHex("#45475A")
         BtnCopyResult.Visibility = Visibility.Collapsed
         PwdPassphrase.Password = String.Empty
         SetStatus("Ready — select a profile to get started.", "#6C7086", "")
@@ -286,19 +286,19 @@ Class MainWindow
         Select Case status
             Case SignatureStatus.Valid
                 TxtSignatureResult.Text = ChrW(&H2714) & " Valid signature from " & name
-                TxtSignatureResult.Foreground = New SolidColorBrush(CType(ColorConverter.ConvertFromString("#A6E3A1"), Color))
+                TxtSignatureResult.Foreground = UiBrushes.FromHex("#A6E3A1")
                 SetStatus("Successfully decrypted. Signature verified.", "#A6E3A1", "󰄬")
             Case SignatureStatus.Invalid
                 TxtSignatureResult.Text = ChrW(&H26A0) & " Signature INVALID or from a different key than " & name
-                TxtSignatureResult.Foreground = New SolidColorBrush(CType(ColorConverter.ConvertFromString("#F38BA8"), Color))
+                TxtSignatureResult.Foreground = UiBrushes.FromHex("#F38BA8")
                 SetStatus("Decrypted, but the signature could not be verified. Do not trust the sender.", "#F38BA8", "󰀦")
             Case SignatureStatus.NotSigned
                 TxtSignatureResult.Text = "Not signed — sender cannot be verified"
-                TxtSignatureResult.Foreground = New SolidColorBrush(CType(ColorConverter.ConvertFromString("#F9E2AF"), Color))
+                TxtSignatureResult.Foreground = UiBrushes.FromHex("#F9E2AF")
                 SetStatus("Successfully decrypted (message is not signed).", "#A6E3A1", "󰄬")
             Case Else
                 TxtSignatureResult.Text = "Signature not checked (no sender key selected)"
-                TxtSignatureResult.Foreground = New SolidColorBrush(CType(ColorConverter.ConvertFromString("#6C7086"), Color))
+                TxtSignatureResult.Foreground = UiBrushes.FromHex("#6C7086")
                 SetStatus("Successfully decrypted.", "#A6E3A1", "󰄬")
         End Select
     End Sub
@@ -313,7 +313,7 @@ Class MainWindow
         If dlg.ShowDialog() = True Then
             _senderKey = dlg.SelectedKey
             TxtSenderKey.Text = "Sender: " & _senderKey.Name
-            TxtSenderKey.Foreground = New SolidColorBrush(CType(ColorConverter.ConvertFromString("#CDD6F4"), Color))
+            TxtSenderKey.Foreground = UiBrushes.FromHex("#CDD6F4")
         End If
     End Sub
 
@@ -340,16 +340,15 @@ Class MainWindow
         End If
 
         Dim now = DateTime.UtcNow
-        Dim check = PgpService.CheckRecipientKey(text, now)
         Dim v = KeyValidator.ValidatePublicKey(text)
+        Dim check = PgpService.CheckRecipientKey(v, now)
         TxtRecipientStatus.Visibility = Visibility.Visible
         If check.Level = KeyCheckLevel.Blocked Then
             TxtRecipientStatus.Text = ChrW(&H2718) & "  " & check.Message
-            TxtRecipientStatus.Foreground = New SolidColorBrush(CType(ColorConverter.ConvertFromString("#F38BA8"), Color))
+            TxtRecipientStatus.Foreground = UiBrushes.FromHex("#F38BA8")
         Else
             TxtRecipientStatus.Text = ChrW(&H2714) & "  " & v.KeyInfo & "  ·  " & KeyExpiry.Describe(v.ExpiresAtUtc, now)
-            TxtRecipientStatus.Foreground = New SolidColorBrush(CType(ColorConverter.ConvertFromString(
-                If(check.Level = KeyCheckLevel.Warning, "#F9E2AF", "#A6E3A1")), Color))
+            TxtRecipientStatus.Foreground = UiBrushes.FromHex(If(check.Level = KeyCheckLevel.Warning, "#F9E2AF", "#A6E3A1"))
             BtnSaveRecipient.IsEnabled = True
         End If
     End Sub
@@ -410,7 +409,7 @@ Class MainWindow
         PwdEncryptPassphrase.Password = ""
         HintPlaintext.Visibility = Visibility.Visible
         TxtEncryptedOutput.Text = "Encrypted output appears here..."
-        TxtEncryptedOutput.Foreground = New SolidColorBrush(Color.FromRgb(&H89, &HDC, &HEB))
+        TxtEncryptedOutput.Foreground = UiBrushes.FromHex("#89DCEB")
         BtnCopyEncrypted.Visibility = Visibility.Collapsed
     End Sub
 

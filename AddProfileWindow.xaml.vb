@@ -46,10 +46,10 @@ Class AddProfileWindow
         label.Visibility = Visibility.Visible
         If r.IsValid Then
             label.Text = ChrW(&H2714) & "  " & r.KeyInfo
-            label.Foreground = New SolidColorBrush(CType(ColorConverter.ConvertFromString("#A6E3A1"), Color))
+            label.Foreground = UiBrushes.FromHex("#A6E3A1")
         Else
             label.Text = ChrW(&H2718) & "  " & r.ErrorMessage
-            label.Foreground = New SolidColorBrush(CType(ColorConverter.ConvertFromString("#F38BA8"), Color))
+            label.Foreground = UiBrushes.FromHex("#F38BA8")
         End If
     End Sub
 

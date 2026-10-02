@@ -1,6 +1,6 @@
 # Security audit – PGPKeyDesk 2.1.0
 
-Scope: key storage, passphrase handling, dependencies, file handling. Method: code review of all `*.vb`, empirical tests of PgpCore behaviour, `dotnet list package --vulnerable --include-transitive`. This is an internal review, **not** an independent audit.
+Reporting: see [SECURITY.md](../SECURITY.md). Scope: key storage, passphrase handling, dependencies, file handling. Method: code review of all `*.vb`, empirical tests of PgpCore behaviour, `dotnet list package --vulnerable --include-transitive`. This is an internal review, **not** an independent audit.
 
 ## Findings
 
@@ -19,6 +19,7 @@ Scope: key storage, passphrase handling, dependencies, file handling. Method: co
 | 11 | Info | Signature verification: a *signed message from an unknown sender* is reported as "not checked", never as valid. A wrong sender key reports **invalid**. | By design; covered by tests. |
 | 12 | Info | The EXE and installer are not code-signed (SmartScreen warning). | Open (needs a certificate). |
 | 13 | Info | PgpCore upgraded 6.5.0 → 8.0.0 (all 59 tests pass; API unchanged for our usage). | Done. |
+| 14 | Medium | A failed file operation (wrong passphrase, bad key) left an empty output file and could overwrite an existing file the user had chosen as target. | **Fixed.** Output is written to a temp file and moved into place only on success. Covered by tests. |
 
 ## Dependencies
 
