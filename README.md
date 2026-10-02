@@ -22,6 +22,41 @@ A lightweight Windows desktop application (WPF, VB.NET, .NET 10) for managing **
 - See [docs/SECURITY-AUDIT.md](docs/SECURITY-AUDIT.md) for the security review
 - Dark theme; keyboard: `Ctrl+Enter` runs the action of the active tab
 
+## Screenshots
+
+The screenshots show the app with throw-away demo keys (*Alice (Demo)* and *Bob (Demo)*); no real data is displayed.
+
+### Decrypt – with signature check
+
+![Decrypt tab: message decrypted, valid signature from Bob (Demo)](docs/screenshots/decrypt.png)
+
+Select a profile on the left, paste the PGP message (or use **Open File**), enter the passphrase and press **Decrypt** (`Ctrl+Enter`). If you pick the sender's public key via **Sender Key**, the signature is verified in the same step and reported as *valid*, *invalid* or *not signed*. The decrypted text can be copied; the clipboard is cleared automatically after 60 seconds.
+
+### Encrypt
+
+![Encrypt tab: recipient key with fingerprint info and expiry, plaintext, encrypted output](docs/screenshots/encrypt.png)
+
+Paste or import the recipient's public key (or choose it from the **Keyring**). The app shows the algorithm, user ID and expiry date; expired or revoked keys are blocked and keys that expire within 30 days are flagged. With a profile selected, the message is additionally **signed** with its private key.
+
+### Files
+
+![Files tab: encrypt, decrypt, sign and verify files](docs/screenshots/files.png)
+
+Encrypt, decrypt, sign and verify arbitrary files (up to 200 MB) with optional ASCII armor. Results are written to a temporary file first, so a failed operation never leaves an empty or half-written file behind.
+
+### Recipient keyring
+
+![Recipient keyring with fingerprint and expiry](docs/screenshots/keyring.png)
+
+Store recipients' public keys once and pick them from a list. Each entry shows the key ID and its validity; the key list is checked for expired or revoked keys at startup.
+
+### Generate a key pair and add profiles
+
+| Generate key pair | Add profile |
+|---|---|
+| ![Generate key pair dialog](docs/screenshots/generate-key-pair.png) | ![Add profile dialog](docs/screenshots/add-profile.png) |
+
+Generate an RSA 2048 or 4096 bit key pair protected by a passphrase, or import an existing private (and optional public) key as a profile. Keys are validated on import.
 ## Changes in 2.1.0
 
 - Recipient keyring, key expiry warnings, file encryption, signature verification
