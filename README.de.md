@@ -24,6 +24,41 @@ Schlanke Windows-Desktop-Anwendung (WPF, VB.NET, .NET 10) zum Verwalten von **Op
 - Sicherheitsbewertung: [docs/SECURITY-AUDIT.md](docs/SECURITY-AUDIT.md) (englisch)
 - Dunkles Design, Tastatur: `Strg+Enter` führt die Aktion des aktiven Tabs aus
 
+## Screenshots
+
+Die Screenshots zeigen die Anwendung mit Wegwerf-Demoschlüsseln (*Alice (Demo)* und *Bob (Demo)*); es werden keine echten Daten angezeigt. Die Oberfläche ist englisch.
+
+### Entschlüsseln – mit Signaturprüfung
+
+![Tab Decrypt: Nachricht entschlüsselt, gültige Signatur von Bob (Demo)](docs/screenshots/decrypt.png)
+
+Links ein Profil wählen, die PGP-Nachricht einfügen (oder über **Open File** laden), Passphrase eingeben und **Decrypt** drücken (`Strg+Enter`). Wird über **Sender Key** der öffentliche Schlüssel des Absenders gewählt, wird die Signatur im selben Schritt geprüft und als *gültig*, *ungültig* oder *nicht signiert* gemeldet. Der entschlüsselte Text lässt sich kopieren; die Zwischenablage wird nach 60 Sekunden automatisch geleert.
+
+### Verschlüsseln
+
+![Tab Encrypt: Empfängerschlüssel mit Ablaufinfo, Klartext, verschlüsselte Ausgabe](docs/screenshots/encrypt.png)
+
+Den öffentlichen Schlüssel des Empfängers einfügen oder importieren (oder im **Keyring** auswählen). Die App zeigt Algorithmus, User-ID und Ablaufdatum an; abgelaufene oder widerrufene Schlüssel werden blockiert, Schlüssel mit Ablauf in 30 Tagen markiert. Ist ein Profil gewählt, wird die Nachricht zusätzlich mit dessen privatem Schlüssel **signiert**.
+
+### Dateien
+
+![Tab Files: Dateien ver- und entschlüsseln, signieren und prüfen](docs/screenshots/files.png)
+
+Beliebige Dateien (bis 200 MB) verschlüsseln, entschlüsseln, signieren und prüfen, optional mit ASCII-Armor. Das Ergebnis wird zunächst in eine temporäre Datei geschrieben; ein fehlgeschlagener Vorgang hinterlässt daher nie eine leere oder halbfertige Datei.
+
+### Empfänger-Schlüsselbund
+
+![Empfänger-Schlüsselbund mit Fingerprint und Ablauf](docs/screenshots/keyring.png)
+
+Öffentliche Schlüssel von Empfängern einmal speichern und aus einer Liste auswählen. Jeder Eintrag zeigt Schlüssel-ID und Gültigkeit; beim Start wird der Schlüsselbund auf abgelaufene oder widerrufene Schlüssel geprüft.
+
+### Schlüsselpaar erzeugen und Profile hinzufügen
+
+| Schlüsselpaar erzeugen | Profil hinzufügen |
+|---|---|
+| ![Dialog Schlüsselpaar erzeugen](docs/screenshots/generate-key-pair.png) | ![Dialog Profil hinzufügen](docs/screenshots/add-profile.png) |
+
+Ein RSA-Schlüsselpaar (2048 oder 4096 Bit) mit Passphrase erzeugen oder einen vorhandenen privaten (und optional öffentlichen) Schlüssel als Profil importieren. Schlüssel werden beim Import validiert.
 ## Änderungen in 2.1.0
 
 - Empfänger-Schlüsselbund, Ablaufwarnungen, Datei-Verschlüsselung, Signaturprüfung
