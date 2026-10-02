@@ -55,9 +55,16 @@ jobs:
   release:
     needs: test
     runs-on: windows-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     permissions:
       contents: write
+    env:
+      # Code signing via SignPath Foundation is optional: it is active only when the repository variable
+      # SIGNPATH_ORGANIZATION_ID and the secret SIGNPATH_API_TOKEN exist (see docs/CODE-SIGNING.md).
+      SIGNPATH_API_TOKEN: ${{ secrets.SIGNPATH_API_TOKEN }}
+      SIGNPATH_ORGANIZATION_ID: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+      SIGNPATH_PROJECT_SLUG: ${{ vars.SIGNPATH_PROJECT_SLUG || 'PGPKeyDesk' }}
+      SIGNPATH_POLICY_SLUG: ${{ vars.SIGNPATH_POLICY_SLUG || 'release-signing' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -87,6 +94,53 @@ jobs:
       - name: Publish (self-contained win-x64)
         run: dotnet publish PGPKeyDesk.vbproj -c Release -r win-x64 --self-contained true -o publish
 
+      - name: Check whether code signing is configured
+        id: sign
+        shell: pwsh
+        run: |
+          $on = (-not [string]::IsNullOrEmpty($env:SIGNPATH_API_TOKEN)) -and (-not [string]::IsNullOrEmpty($env:SIGNPATH_ORGANIZATION_ID))
+          "enabled=$($on.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
+          if (-not $on) { Write-Warning 'Code signing is NOT configured: release assets will be unsigned (SmartScreen warning).' }
+
+      - name: Collect unsigned application binaries
+        if: steps.sign.outputs.enabled == 'true'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force signing/app | Out-Null
+          Copy-Item publish/PGPKeyDesk.exe, publish/PGPKeyDesk.dll signing/app/
+
+      - name: Upload unsigned application binaries
+        if: steps.sign.outputs.enabled == 'true'
+        id: up-app
+        uses: actions/upload-artifact@v4
+        with:
+          name: unsigned-app
+          path: signing/app/*
+
+      - name: Sign application binaries (SignPath)
+        if: steps.sign.outputs.enabled == 'true'
+        uses: signpath/github-action-submit-signing-request@v1
+        with:
+          api-token: ${{ env.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ env.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ env.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ env.SIGNPATH_POLICY_SLUG }}
+          artifact-configuration-slug: app
+          github-artifact-id: ${{ steps.up-app.outputs.artifact-id }}
+          wait-for-completion: true
+          output-artifact-directory: signed/app
+
+      - name: Replace binaries with signed ones and verify signature
+        if: steps.sign.outputs.enabled == 'true'
+        shell: pwsh
+        run: |
+          foreach ($f in 'PGPKeyDesk.exe', 'PGPKeyDesk.dll') {
+            Copy-Item "signed/app/$f" "publish/$f" -Force
+            $sig = Get-AuthenticodeSignature "publish/$f"
+            if ($sig.Status -ne 'Valid') { Write-Error "$f signature is $($sig.Status)"; exit 1 }
+            Write-Host "$f signed by: $($sig.SignerCertificate.Subject)"
+          }
+
       - name: Create ZIP and SHA-256
         id: pkg
         shell: pwsh
@@ -111,6 +165,39 @@ jobs:
             if (-not (Test-Path $f)) { Write-Error "Missing expected installer artifact: $f"; exit 1 }
           }
           "setup=$setup" >> $env:GITHUB_OUTPUT
+
+      - name: Upload unsigned installer
+        if: steps.sign.outputs.enabled == 'true'
+        id: up-inst
+        uses: actions/upload-artifact@v4
+        with:
+          name: unsigned-installer
+          path: installer/Output/${{ steps.inst.outputs.setup }}
+
+      - name: Sign installer (SignPath)
+        if: steps.sign.outputs.enabled == 'true'
+        uses: signpath/github-action-submit-signing-request@v1
+        with:
+          api-token: ${{ env.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ env.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ env.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ env.SIGNPATH_POLICY_SLUG }}
+          artifact-configuration-slug: installer
+          github-artifact-id: ${{ steps.up-inst.outputs.artifact-id }}
+          wait-for-completion: true
+          output-artifact-directory: signed/installer
+
+      - name: Replace installer with signed one, verify signature, refresh SHA-256
+        if: steps.sign.outputs.enabled == 'true'
+        shell: pwsh
+        run: |
+          $setup = '${{ steps.inst.outputs.setup }}'
+          Copy-Item "signed/installer/$setup" "installer/Output/$setup" -Force
+          $sig = Get-AuthenticodeSignature "installer/Output/$setup"
+          if ($sig.Status -ne 'Valid') { Write-Error "Installer signature is $($sig.Status)"; exit 1 }
+          Write-Host "Installer signed by: $($sig.SignerCertificate.Subject)"
+          $hash = (Get-FileHash "installer/Output/$setup" -Algorithm SHA256).Hash.ToLowerInvariant()
+          [System.IO.File]::WriteAllText("$PWD/installer/Output/$setup.sha256", "$hash  $setup`n", (New-Object System.Text.UTF8Encoding($false)))
 
       - name: Installer smoke test (silent install / uninstall)
         shell: pwsh

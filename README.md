@@ -90,6 +90,14 @@ dotnet publish PGPKeyDesk.vbproj -c Release -r win-x64 --self-contained true -o 
 | `Models/` | `PGPProfile` |
 | `Themes/` | Colors and control styles |
 
+## Code signing policy
+
+Free code signing provided by [SignPath.io](https://signpath.io), certificate by [SignPath Foundation](https://signpath.org). (Active once the project is approved by the foundation; see [docs/CODE-SIGNING.md](docs/CODE-SIGNING.md).)
+
+- **Committers, reviewers and approvers:** [Michael Bergfeld](https://github.com/domezos2024) (project owner)
+- Only binaries built from this repository by the GitHub Actions release workflow are signed (`PGPKeyDesk.exe`, `PGPKeyDesk.dll`, installer). Third-party libraries are not re-signed.
+- **Privacy:** this program will not transfer any information to other networked systems unless specifically requested by the user or the person installing or operating it.
+
 ## License
 
 [MIT License](LICENSE) © 2026 Michael Bergfeld. Bundled third-party components ([PgpCore](https://github.com/mattosaurus/PgpCore), [BouncyCastle](https://www.bouncycastle.org/)) are under their own licenses (both MIT-compatible).
