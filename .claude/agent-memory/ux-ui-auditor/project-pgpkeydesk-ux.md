@@ -1,11 +1,11 @@
 ---
-name: project-opengpg-ux
-description: UX/UI state of the OpenGPG WPF application — design decisions, fixed issues, and known patterns
+name: project-pgpkeydesk-ux
+description: UX/UI state of the PGPKeyDesk WPF application — design decisions, fixed issues, and known patterns
 metadata:
   type: project
 ---
 
-OpenGPG is a WPF .NET application (VB.NET) for PGP encryption/decryption with a dark Catppuccin-inspired theme (#1E1E2E background, #89B4FA blue accent, #A6E3A1 green, #F38BA8 red).
+PGPKeyDesk is a WPF .NET application (VB.NET) for PGP encryption/decryption with a dark Catppuccin-inspired theme (#1E1E2E background, #89B4FA blue accent, #A6E3A1 green, #F38BA8 red).
 
 **Architecture:**
 - MainWindow: two-panel layout (240px sidebar + right content area with TabControl)

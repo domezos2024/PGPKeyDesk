@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="1a.png" alt="OpenGPG Logo" width="260">
+  <img src="1a.png" alt="PGPKeyDesk Logo" width="260">
 </p>
 
-# OpenGPG
+# PGPKeyDesk
 
 Schlanke Windows-Desktop-Anwendung (WPF, VB.NET, .NET 10) zum Verwalten von **OpenPGP-Schlüsselprofilen** sowie zum **Ver- und Entschlüsseln von PGP-Nachrichten** – ohne GnuPG-Installation. Die Kryptografie übernimmt [PgpCore](https://github.com/mattosaurus/PgpCore) (BouncyCastle).
 
@@ -19,16 +19,16 @@ Schlanke Windows-Desktop-Anwendung (WPF, VB.NET, .NET 10) zum Verwalten von **Op
 
 ## Installation (für jeden Nutzer, ohne Vorbedingungen)
 
-1. Auf der Seite [Releases](../../releases/latest) die Datei **`OpenGPG-<Version>-win-x64.zip`** herunterladen.
-2. ZIP entpacken (z. B. nach `C:\Tools\OpenGPG`).
-3. `OpenGPG.exe` starten.
+1. Auf der Seite [Releases](../../releases/latest) die Datei **`PGPKeyDesk-<Version>-win-x64.zip`** herunterladen.
+2. ZIP entpacken (z. B. nach `C:\Tools\PGPKeyDesk`).
+3. `PGPKeyDesk.exe` starten.
 
 Das Release ist **self-contained**: Es bringt die .NET-Laufzeit mit. Es müssen weder .NET, GnuPG noch sonstige Software installiert werden. Voraussetzung: **Windows 10 (1809) oder neuer, 64 Bit**.
 
-Prüfsumme (SHA-256) steht in den Release-Notes bzw. in `OpenGPG-<Version>-win-x64.zip.sha256`:
+Prüfsumme (SHA-256) steht in den Release-Notes bzw. in `PGPKeyDesk-<Version>-win-x64.zip.sha256`:
 
 ```powershell
-Get-FileHash .\OpenGPG-<Version>-win-x64.zip -Algorithm SHA256
+Get-FileHash .\PGPKeyDesk-<Version>-win-x64.zip -Algorithm SHA256
 ```
 
 > Hinweis: Die EXE ist nicht code-signiert. Windows SmartScreen kann daher beim ersten Start warnen („Weitere Informationen“ → „Trotzdem ausführen“).
@@ -38,20 +38,20 @@ Get-FileHash .\OpenGPG-<Version>-win-x64.zip -Algorithm SHA256
 Voraussetzungen: [.NET 10 SDK](https://dotnet.microsoft.com/download) unter Windows.
 
 ```powershell
-git clone https://github.com/domezos2024/OpenGPG.git
-cd OpenGPG
-dotnet run -c Release --project OpenGPG.vbproj
+git clone https://github.com/domezos2024/PGPKeyDesk.git
+cd PGPKeyDesk
+dotnet run -c Release --project PGPKeyDesk.vbproj
 ```
 
 Eigenständiges Paket erzeugen (wie im Release):
 
 ```powershell
-dotnet publish OpenGPG.vbproj -c Release -r win-x64 --self-contained true -o publish
+dotnet publish PGPKeyDesk.vbproj -c Release -r win-x64 --self-contained true -o publish
 ```
 
 ## Sicherheit & Datenspeicherung
 
-- Profile liegen in `%AppData%\OpenGPG\profiles.json` und sind mit **Windows DPAPI** (`DataProtectionScope.CurrentUser`) verschlüsselt: lesbar nur für denselben Windows-Benutzer auf demselben Rechner. Für ein Backup die Schlüssel daher über **Export** sichern.
+- Profile liegen in `%AppData%\PGPKeyDesk\profiles.json` (Profile der früheren Version „OpenGPG“ aus `%AppData%\OpenGPG` werden automatisch übernommen) und sind mit **Windows DPAPI** (`DataProtectionScope.CurrentUser`) verschlüsselt: lesbar nur für denselben Windows-Benutzer auf demselben Rechner. Für ein Backup die Schlüssel daher über **Export** sichern.
 - **Passphrasen werden nie gespeichert**, sie existieren nur während der jeweiligen Operation im Speicher.
 - Der Export privater Schlüssel erfolgt im Klartext (armored, weiterhin passphrase-geschützt) – sicher aufbewahren.
 - Die Anwendung baut keine Netzwerkverbindungen auf und sendet keine Telemetrie.

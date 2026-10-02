@@ -1,4 +1,4 @@
-Imports OpenGPG.Models
+Imports PGPKeyDesk.Models
 Imports PgpCore
 Imports System.IO
 Imports System.Text
