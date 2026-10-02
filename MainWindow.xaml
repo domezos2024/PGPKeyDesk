@@ -1,6 +1,7 @@
 <Window x:Class="MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:PGPKeyDesk"
         Title="PGPKeyDesk" Height="720" Width="1000"
         MinHeight="560" MinWidth="750"
         WindowStartupLocation="CenterScreen"
@@ -19,6 +20,7 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
@@ -98,6 +100,12 @@
                             ToolTip="Export private key as .asc"
                             Click="OnExportPrivateKeyClicked"/>
                 </Grid>
+                <Button Grid.Row="6" Content="&#x1F511; Recipient Keyring"
+                        Style="{StaticResource QuietSidebarBtn}"
+                        HorizontalAlignment="Stretch"
+                        ToolTip="Manage recipients' public keys and see key expiry"
+                        Click="OpenKeyring_Click"
+                        Margin="0,12,0,0"/>
             </Grid>
         </Border>
         <Grid Grid.Column="1" Margin="28,24,28,24">
@@ -158,10 +166,20 @@
                                 <TextBlock Text="Encrypted Message (PGP Armored)"
                                            Style="{StaticResource FieldLabel}"
                                            VerticalAlignment="Center" Margin="0"/>
-                                <Button Grid.Column="1" Content="&#x1F4C2; Open File"
-                                        Style="{StaticResource QuietSidebarBtn}"
-                                        Padding="12,5"
-                                        Click="OnDecryptOpenFileClicked"/>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                    <TextBlock x:Name="TxtSenderKey" Text="Sender: none (signature not checked)"
+                                               Foreground="#6C7086" FontSize="12" VerticalAlignment="Center"
+                                               Margin="0,0,8,0" MaxWidth="260" TextTrimming="CharacterEllipsis"/>
+                                    <Button Content="&#x1F58A; Sender Key"
+                                            Style="{StaticResource QuietSidebarBtn}"
+                                            Padding="12,5" Margin="0,0,6,0"
+                                            ToolTip="Pick the sender's public key from the keyring to verify the signature"
+                                            Click="PickSenderKey_Click"/>
+                                    <Button Content="&#x1F4C2; Open File"
+                                            Style="{StaticResource QuietSidebarBtn}"
+                                            Padding="12,5"
+                                            Click="OnDecryptOpenFileClicked"/>
+                                </StackPanel>
                             </Grid>
                             <Grid Grid.Row="1">
                                 <TextBox x:Name="TxtEncrypted"
@@ -214,8 +232,12 @@
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Text="Decrypted Message" Style="{StaticResource FieldLabel}"
-                                           VerticalAlignment="Center" Margin="0"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Decrypted Message" Style="{StaticResource FieldLabel}"
+                                               VerticalAlignment="Center" Margin="0"/>
+                                    <TextBlock x:Name="TxtSignatureResult" FontSize="12" FontWeight="Medium"
+                                               VerticalAlignment="Center" Margin="14,0,0,0"/>
+                                </StackPanel>
                                 <Button Grid.Column="1" x:Name="BtnCopyResult"
                                         Content="Copy" Visibility="Collapsed"
                                         Style="{StaticResource QuietSidebarBtn}"
@@ -258,9 +280,19 @@
                                            Style="{StaticResource FieldLabel}"
                                            VerticalAlignment="Center" Margin="0"/>
                                 <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                    <Button Content="&#x1F4C2; Import Key"
+                                    <Button Content="&#x1F511; Keyring"
                                             Style="{StaticResource QuietSidebarBtn}"
                                             Padding="12,5"
+                                            ToolTip="Choose a recipient from your keyring"
+                                            Click="PickRecipient_Click"/>
+                                    <Button x:Name="BtnSaveRecipient" Content="&#x1F4BE; Save"
+                                            Style="{StaticResource QuietSidebarBtn}"
+                                            Padding="12,5" Margin="6,0,0,0" IsEnabled="False"
+                                            ToolTip="Save this public key to the keyring"
+                                            Click="SaveRecipient_Click"/>
+                                    <Button Content="&#x1F4C2; Import Key"
+                                            Style="{StaticResource QuietSidebarBtn}"
+                                            Padding="12,5" Margin="6,0,0,0"
                                             Click="OnEncryptImportRecipientKeyClicked"/>
                                     <Button x:Name="BtnUseOwnPublicKey"
                                             Content="My Key"
@@ -288,6 +320,8 @@
                                            Padding="11,9" IsHitTestVisible="False"
                                            VerticalAlignment="Top"/>
                             </Grid>
+                            <TextBlock x:Name="TxtRecipientStatus" FontSize="12" Margin="0,6,0,0"
+                                       TextWrapping="Wrap" Visibility="Collapsed"/>
                         </StackPanel>
                         <Grid Grid.Row="1">
                             <Grid.RowDefinitions>
@@ -374,6 +408,9 @@
                             </Border>
                         </Grid>
                     </Grid>
+                </TabItem>
+                <TabItem Header="&#x1F4C1;  Files">
+                    <local:FilesView x:Name="FilesTab"/>
                 </TabItem>
             </TabControl>
             <Border Grid.Row="2" Margin="0,12,0,0" Background="#181825"

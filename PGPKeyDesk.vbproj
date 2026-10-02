@@ -8,10 +8,16 @@
     <Platforms>AnyCPU;x64</Platforms>
     <ApplicationIcon>app.ico</ApplicationIcon>
     <AssemblyName>PGPKeyDesk</AssemblyName>
-    <Version>2.0.1</Version>
+    <Version>2.1.0</Version>
     <Product>PGPKeyDesk</Product>
     <Description>PGP-Schluesselprofile verwalten sowie Nachrichten ver- und entschluesseln</Description>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="tests\**;installer\**" />
+    <EmbeddedResource Remove="tests\**;installer\**" />
+    <None Remove="tests\**;installer\**" />
+  </ItemGroup>
 
   <ItemGroup>
     <None Include="app.ico" />

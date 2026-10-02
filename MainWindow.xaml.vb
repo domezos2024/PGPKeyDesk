@@ -11,14 +11,62 @@ Class MainWindow
     Private _selectedProfile As PGPProfile
     Private _statusTimer As DispatcherTimer
     Private _passphraseTimer As DispatcherTimer
+    Private _clipboardTimer As DispatcherTimer
+    Private _senderKey As RecipientKey
+    Private Const MaxKeyFileBytes As Long = 1000000L
+    Private Const ClipboardClearSeconds As Integer = 60
 
     Public Sub New()
         InitializeComponent()
     End Sub
 
     Private Sub Window_Loaded(sender As Object, e As RoutedEventArgs)
-        _profiles = ProfileStore.Load()
+        Try
+            _profiles = ProfileStore.Load()
+        Catch ex As Exception
+            _profiles = New List(Of PGPProfile)
+            MessageBox.Show("Profiles could not be loaded:" & vbCrLf & ex.Message, "Profiles", MessageBoxButton.OK, MessageBoxImage.Error)
+        End Try
         RefreshProfileList()
+
+        If ProfileStore.Default.LastLoadWarning IsNot Nothing Then
+            MessageBox.Show(ProfileStore.Default.LastLoadWarning, "Profile file unreadable", MessageBoxButton.OK, MessageBoxImage.Warning)
+        End If
+        If RecipientKeyring.Default.LastLoadWarning IsNot Nothing Then
+            MessageBox.Show(RecipientKeyring.Default.LastLoadWarning, "Keyring unreadable", MessageBoxButton.OK, MessageBoxImage.Warning)
+        End If
+        WarnAboutExpiringKeys()
+    End Sub
+
+    ' Startup check: own profile keys and keyring recipients that are expired or expire within 30 days.
+    Private Sub WarnAboutExpiringKeys()
+        Dim now = DateTime.UtcNow
+        Dim problems As New List(Of String)
+
+        For Each p In _profiles
+            Dim v = KeyValidator.ValidatePrivateKey(p.PrivateKey)
+            If Not v.IsValid Then Continue For
+            Dim st = v.GetExpiryStatus(now)
+            If st = KeyExpiryStatus.Expired OrElse st = KeyExpiryStatus.ExpiringSoon Then
+                problems.Add("Profile """ & p.Name & """: " & KeyExpiry.Describe(v.ExpiresAtUtc, now))
+            End If
+        Next
+        For Each k In RecipientKeyring.Default.Keys
+            Dim v = KeyValidator.ValidatePublicKey(k.PublicKey)
+            If Not v.IsValid Then Continue For
+            Dim st = v.GetExpiryStatus(now)
+            If v.IsRevoked Then
+                problems.Add("Recipient """ & k.Name & """: key REVOKED")
+            ElseIf st = KeyExpiryStatus.Expired OrElse st = KeyExpiryStatus.ExpiringSoon Then
+                problems.Add("Recipient """ & k.Name & """: " & KeyExpiry.Describe(v.ExpiresAtUtc, now))
+            End If
+        Next
+
+        If problems.Count > 0 Then
+            SetStatus(problems.Count & " key warning(s) — open the Recipient Keyring or check your profiles.", "#F9E2AF", "")
+            MessageBox.Show("Key expiry warnings:" & vbCrLf & vbCrLf & String.Join(vbCrLf, problems),
+                            "Key expiry", MessageBoxButton.OK, MessageBoxImage.Warning)
+        End If
     End Sub
 
     Private Sub Window_PreviewKeyDown(sender As Object, e As KeyEventArgs)
@@ -98,6 +146,7 @@ Class MainWindow
             BtnExportPrivateKey.IsEnabled = False
         End If
 
+        FilesTab.Profile = _selectedProfile
         UpdateDecryptButton()
         UpdateEncryptButton()
     End Sub
@@ -115,14 +164,16 @@ Class MainWindow
             LoadingOverlay.Visibility = Visibility.Visible
             SetStatus("Decrypting...", "#FAB387", "󱐋")
 
-            Dim pgp As New PGP(New EncryptionKeys(_selectedProfile.PrivateKey, passphrase))
-            Dim decrypted = Await pgp.DecryptArmoredStringAsync(encryptedText)
+            Dim senderPub = If(_senderKey Is Nothing, Nothing, _senderKey.PublicKey)
+            Dim res = Await PgpService.DecryptTextAsync(encryptedText, _selectedProfile.PrivateKey, passphrase, senderPub)
 
-            TxtDecrypted.Text = decrypted
+            TxtDecrypted.Text = res.Text
             TxtDecrypted.Foreground = New SolidColorBrush(CType(ColorConverter.ConvertFromString("#A6E3A1"), Color))
             BtnCopyResult.Visibility = Visibility.Visible
-            SetStatus("Successfully decrypted.", "#A6E3A1", "󰄬")
+            PwdPassphrase.Clear()
+            ShowSignatureResult(res.Signature)
         Catch ex As Exception
+            TxtSignatureResult.Text = ""
             TxtDecrypted.Text = "ERROR: " & ex.Message
             TxtDecrypted.Foreground = New SolidColorBrush(CType(ColorConverter.ConvertFromString("#F38BA8"), Color))
             BtnCopyResult.Visibility = Visibility.Collapsed
@@ -144,16 +195,22 @@ Class MainWindow
             LoadingOverlayEncrypt.Visibility = Visibility.Visible
             SetStatus("Encrypting...", "#FAB387", "󱐋")
 
-            Dim encrypted As String
-            If _selectedProfile IsNot Nothing AndAlso Not String.IsNullOrEmpty(_selectedProfile.PrivateKey) Then
-                Dim keys As New EncryptionKeys(publicKey, _selectedProfile.PrivateKey, PwdEncryptPassphrase.Password)
-                Dim pgp As New PGP(keys)
-                encrypted = Await pgp.EncryptArmoredStringAndSignAsync(plainText)
-                SetStatus("Signed and encrypted successfully.", "#A6E3A1", "󰄬")
+            Dim check = PgpService.CheckRecipientKey(publicKey, DateTime.UtcNow)
+            If check.Level = KeyCheckLevel.Blocked Then
+                SetStatus(check.Message, "#F38BA8", "󰅙")
+                Return
+            End If
+
+            Dim sign = _selectedProfile IsNot Nothing AndAlso Not String.IsNullOrEmpty(_selectedProfile.PrivateKey)
+            Dim encrypted = Await PgpService.EncryptTextAsync(plainText, publicKey,
+                                If(sign, _selectedProfile.PrivateKey, Nothing),
+                                If(sign, PwdEncryptPassphrase.Password, Nothing))
+            If sign Then PwdEncryptPassphrase.Clear()
+
+            If check.Level = KeyCheckLevel.Warning Then
+                SetStatus((If(sign, "Signed and encrypted. ", "Encrypted. ")) & check.Message, "#F9E2AF", "")
             Else
-                Dim pgp As New PGP(New EncryptionKeys(publicKey))
-                encrypted = Await pgp.EncryptArmoredStringAsync(plainText)
-                SetStatus("Successfully encrypted.", "#A6E3A1", "󰄬")
+                SetStatus(If(sign, "Signed and encrypted successfully.", "Successfully encrypted."), "#A6E3A1", "󰄬")
             End If
 
             TxtEncryptedOutput.Text = encrypted
@@ -224,6 +281,79 @@ Class MainWindow
         BtnEncrypt.IsEnabled = hasKey AndAlso hasText AndAlso (Not profileActive OrElse hasPassphrase)
     End Sub
 
+    Private Sub ShowSignatureResult(status As SignatureStatus)
+        Dim name = If(_senderKey Is Nothing, "", _senderKey.Name)
+        Select Case status
+            Case SignatureStatus.Valid
+                TxtSignatureResult.Text = ChrW(&H2714) & " Valid signature from " & name
+                TxtSignatureResult.Foreground = New SolidColorBrush(CType(ColorConverter.ConvertFromString("#A6E3A1"), Color))
+                SetStatus("Successfully decrypted. Signature verified.", "#A6E3A1", "󰄬")
+            Case SignatureStatus.Invalid
+                TxtSignatureResult.Text = ChrW(&H26A0) & " Signature INVALID or from a different key than " & name
+                TxtSignatureResult.Foreground = New SolidColorBrush(CType(ColorConverter.ConvertFromString("#F38BA8"), Color))
+                SetStatus("Decrypted, but the signature could not be verified. Do not trust the sender.", "#F38BA8", "󰀦")
+            Case SignatureStatus.NotSigned
+                TxtSignatureResult.Text = "Not signed — sender cannot be verified"
+                TxtSignatureResult.Foreground = New SolidColorBrush(CType(ColorConverter.ConvertFromString("#F9E2AF"), Color))
+                SetStatus("Successfully decrypted (message is not signed).", "#A6E3A1", "󰄬")
+            Case Else
+                TxtSignatureResult.Text = "Signature not checked (no sender key selected)"
+                TxtSignatureResult.Foreground = New SolidColorBrush(CType(ColorConverter.ConvertFromString("#6C7086"), Color))
+                SetStatus("Successfully decrypted.", "#A6E3A1", "󰄬")
+        End Select
+    End Sub
+
+    Private Sub OpenKeyring_Click(sender As Object, e As RoutedEventArgs)
+        Dim dlg As New KeyringWindow() With {.Owner = Me}
+        dlg.ShowDialog()
+    End Sub
+
+    Private Sub PickSenderKey_Click(sender As Object, e As RoutedEventArgs)
+        Dim dlg As New KeyringWindow(True) With {.Owner = Me}
+        If dlg.ShowDialog() = True Then
+            _senderKey = dlg.SelectedKey
+            TxtSenderKey.Text = "Sender: " & _senderKey.Name
+            TxtSenderKey.Foreground = New SolidColorBrush(CType(ColorConverter.ConvertFromString("#CDD6F4"), Color))
+        End If
+    End Sub
+
+    Private Sub PickRecipient_Click(sender As Object, e As RoutedEventArgs)
+        Dim dlg As New KeyringWindow(True) With {.Owner = Me}
+        If dlg.ShowDialog() = True Then TxtRecipientKey.Text = dlg.SelectedKey.PublicKey
+    End Sub
+
+    Private Sub SaveRecipient_Click(sender As Object, e As RoutedEventArgs)
+        Try
+            Dim k = RecipientKeyring.Default.AddOrUpdate(Nothing, TxtRecipientKey.Text.Trim())
+            SetStatus("Saved to keyring: " & k.Name, "#A6E3A1", "󰄬")
+        Catch ex As Exception
+            SetStatus(ex.Message, "#F38BA8", "󰅙")
+        End Try
+    End Sub
+
+    Private Sub UpdateRecipientStatus()
+        Dim text = TxtRecipientKey.Text.Trim()
+        BtnSaveRecipient.IsEnabled = False
+        If text.Length = 0 OrElse Not text.Contains("-----BEGIN PGP") Then
+            TxtRecipientStatus.Visibility = Visibility.Collapsed
+            Return
+        End If
+
+        Dim now = DateTime.UtcNow
+        Dim check = PgpService.CheckRecipientKey(text, now)
+        Dim v = KeyValidator.ValidatePublicKey(text)
+        TxtRecipientStatus.Visibility = Visibility.Visible
+        If check.Level = KeyCheckLevel.Blocked Then
+            TxtRecipientStatus.Text = ChrW(&H2718) & "  " & check.Message
+            TxtRecipientStatus.Foreground = New SolidColorBrush(CType(ColorConverter.ConvertFromString("#F38BA8"), Color))
+        Else
+            TxtRecipientStatus.Text = ChrW(&H2714) & "  " & v.KeyInfo & "  ·  " & KeyExpiry.Describe(v.ExpiresAtUtc, now)
+            TxtRecipientStatus.Foreground = New SolidColorBrush(CType(ColorConverter.ConvertFromString(
+                If(check.Level = KeyCheckLevel.Warning, "#F9E2AF", "#A6E3A1")), Color))
+            BtnSaveRecipient.IsEnabled = True
+        End If
+    End Sub
+
     Private Function GetFriendlyDecryptError(ex As Exception) As String
         Dim msg = ex.Message.ToLower()
         If msg.Contains("bad pass") OrElse msg.Contains("password") OrElse msg.Contains("passphrase") Then
@@ -259,6 +389,7 @@ Class MainWindow
 
     Private Sub TxtRecipientKey_Changed(sender As Object, e As TextChangedEventArgs)
         HintRecipientKey.Visibility = If(String.IsNullOrEmpty(TxtRecipientKey.Text), Visibility.Visible, Visibility.Collapsed)
+        UpdateRecipientStatus()
         UpdateEncryptButton()
     End Sub
 
@@ -270,6 +401,7 @@ Class MainWindow
     Private Sub ClearAll_Click(sender As Object, e As RoutedEventArgs)
         TxtEncrypted.Text = ""
         PwdPassphrase.Password = ""
+        TxtSignatureResult.Text = ""
         ResetDecryptUI()
     End Sub
 
@@ -283,8 +415,25 @@ Class MainWindow
     End Sub
 
     Private Sub CopyResult_Click(sender As Object, e As RoutedEventArgs)
-        Clipboard.SetText(TxtDecrypted.Text)
-        SetStatus("Copied!", "#A6E3A1", "󰄬")
+        Dim text = TxtDecrypted.Text
+        Clipboard.SetText(text)
+        SetStatus("Copied! Clipboard is cleared in " & ClipboardClearSeconds & " s.", "#A6E3A1", "󰄬")
+        ScheduleClipboardClear(text)
+    End Sub
+
+    ' Decrypted plaintext should not linger in the clipboard (clipboard history excluded by the OS).
+    Private Sub ScheduleClipboardClear(copiedText As String)
+        _clipboardTimer?.Stop()
+        _clipboardTimer = New DispatcherTimer() With {.Interval = TimeSpan.FromSeconds(ClipboardClearSeconds)}
+        AddHandler _clipboardTimer.Tick, Sub(s, ev)
+            _clipboardTimer.Stop()
+            Try
+                If Clipboard.ContainsText() AndAlso Clipboard.GetText() = copiedText Then Clipboard.Clear()
+            Catch
+                ' Clipboard may be locked by another process; nothing more to do.
+            End Try
+        End Sub
+        _clipboardTimer.Start()
     End Sub
 
     Private Sub CopyEncrypted_Click(sender As Object, e As RoutedEventArgs)
@@ -333,6 +482,10 @@ Class MainWindow
         }
         If dlg.ShowDialog() <> True Then Return
         Try
+            If New FileInfo(dlg.FileName).Length > MaxKeyFileBytes Then
+                MessageBox.Show("File is too large for a public key.", "Import Error", MessageBoxButton.OK, MessageBoxImage.Warning)
+                Return
+            End If
             TxtRecipientKey.Text = File.ReadAllText(dlg.FileName).Trim()
             SetStatus("Recipient key imported: " & Path.GetFileName(dlg.FileName), "#89B4FA", "")
         Catch ex As Exception

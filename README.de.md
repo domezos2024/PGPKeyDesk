@@ -19,7 +19,16 @@ Schlanke Windows-Desktop-Anwendung (WPF, VB.NET, .NET 10) zum Verwalten von **Op
 - **Entschlüsseln:** PGP-Nachricht einfügen oder aus Datei öffnen, Passphrase eingeben, Klartext kopieren
 - **Verschlüsseln:** Public Key des Empfängers einfügen oder importieren, Text verschlüsseln und kopieren; ist ein Profil gewählt, wird zusätzlich mit dessen privatem Schlüssel **signiert** (Passphrase erforderlich)
 - **Schlüssel-Validierung** beim Import (Format und Vorhandensein eines Master-Keys)
+- **Empfänger-Schlüsselbund** mit Fingerprints und **Ablaufwarnungen** (abgelaufene/widerrufene Schlüssel werden blockiert, Schlüssel mit Ablauf in 30 Tagen markiert)
+- **Dateien ver-/entschlüsseln**, **signieren** und **Signaturen prüfen** (Nachrichten und Dateien; Absender-Schlüssel aus dem Schlüsselbund)
+- Sicherheitsbewertung: [docs/SECURITY-AUDIT.md](docs/SECURITY-AUDIT.md) (englisch)
 - Dunkles Design, Tastatur: `Strg+Enter` führt die Aktion des aktiven Tabs aus
+
+## Änderungen in 2.1.0
+
+- Empfänger-Schlüsselbund, Ablaufwarnungen, Datei-Verschlüsselung, Signaturprüfung
+- Sicherheitsfixes (Datenverlust beim Laden defekter Profildatei, atomares Speichern, Zwischenablage-Löschung)
+- Unit-Tests, GitHub-Actions (Build/Test/Release), Windows-Installer
 
 ## Änderungen in 2.0.1
 
@@ -42,6 +51,10 @@ Get-FileHash .\PGPKeyDesk-<Version>-win-x64.zip -Algorithm SHA256
 ```
 
 > Hinweis: Die EXE ist nicht code-signiert. Windows SmartScreen kann daher beim ersten Start warnen („Weitere Informationen“ → „Trotzdem ausführen“).
+
+## Installer
+
+Alternativ die Datei **`PGPKeyDesk-<Version>-win-x64-setup.exe`** herunterladen (Inno Setup, Windows 10 1809+ x64, Deutsch/Englisch). Installation pro Benutzer oder für alle Benutzer, Startmenü-Verknüpfung (optional Desktop-Verknüpfung) und eine standardmäßig deaktivierte „Öffnen mit“-Registrierung für `.asc`/`.pgp`/`.gpg` (die App akzeptiert noch kein Datei-Argument). Beim Deinstallieren wird gefragt (Standard **Nein**), ob `%AppData%\PGPKeyDesk` gelöscht werden soll; Updates behalten Ihre Daten. Stille Installation: `setup.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /TASKS="desktopicon"`. Prüfsumme in der `.sha256`-Datei. Details und Build-Anleitung: [installer/README.md](installer/README.md).
 
 ## Aus dem Quellcode bauen
 

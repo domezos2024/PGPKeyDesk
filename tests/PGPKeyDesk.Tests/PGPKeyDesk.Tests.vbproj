@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>PGPKeyDesk</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <OptionStrict>Off</OptionStrict>
+    <NoWarn>$(NoWarn);CA1416</NoWarn>
+  </PropertyGroup>
+
+  <!-- The app is a WPF WinExe; the UI-independent code is compiled into the test assembly directly,
+       so the tests also run on non-Windows machines (DPAPI-specific tests skip themselves there). -->
+  <ItemGroup>
+    <Compile Include="..\..\Services\*.vb" Link="Services\%(Filename)%(Extension)" />
+    <Compile Include="..\..\Models\*.vb" Link="Models\%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.*" />
+    <PackageReference Include="NUnit" Version="4.*" />
+    <PackageReference Include="NUnit3TestAdapter" Version="5.*" />
+    <PackageReference Include="PgpCore" Version="6.5.0" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.*" />
+  </ItemGroup>
+
+</Project>
