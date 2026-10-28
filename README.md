@@ -60,11 +60,11 @@ Store recipients' public keys once and pick them from a list. Each entry shows t
 
 Generate an RSA 2048 or 4096 bit key pair protected by a passphrase, or import an existing private (and optional public) key as a profile. Keys are validated on import.
 
-## Unreleased (main)
+## Changes in 2.1.1
 
 - File results are written atomically (temp file, moved into place only on success)
 - Cryptography runs off the UI thread; decrypt and signature check in a single pass
-- Warning before exporting a private key; dependency updates (PgpCore 8.0.0); `SECURITY.md`
+- Warning before exporting a private key; dependency updates (PgpCore 8.1.1); `SECURITY.md`
 
 ## Changes in 2.1.0
 

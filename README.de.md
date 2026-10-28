@@ -62,11 +62,11 @@ Beliebige Dateien (bis 200 MB) verschlüsseln, entschlüsseln, signieren und pr�
 
 Ein RSA-Schlüsselpaar (2048 oder 4096 Bit) mit Passphrase erzeugen oder einen vorhandenen privaten (und optional öffentlichen) Schlüssel als Profil importieren. Schlüssel werden beim Import validiert.
 
-## Unveröffentlicht (main)
+## Änderungen in 2.1.1
 
 - Datei-Ergebnisse werden atomar geschrieben (temporäre Datei, erst bei Erfolg an den Zielort verschoben)
 - Kryptografie läuft außerhalb des UI-Threads; Entschlüsseln und Signaturprüfung in einem Durchgang
-- Warnung vor dem Export eines privaten Schlüssels; Abhängigkeiten aktualisiert (PgpCore 8.0.0); `SECURITY.md`
+- Warnung vor dem Export eines privaten Schlüssels; Abhängigkeiten aktualisiert (PgpCore 8.1.1); `SECURITY.md`
 
 ## Änderungen in 2.1.0
 

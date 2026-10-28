@@ -223,6 +223,11 @@ jobs:
           $hash = '${{ steps.pkg.outputs.sha256 }}'
           $setup = '${{ steps.inst.outputs.setup }}'
           $setupHash = (Get-FileHash "installer/Output/$setup" -Algorithm SHA256).Hash.ToLowerInvariant()
+          $signLine = if ('${{ steps.sign.outputs.enabled }}' -eq 'true') {
+            'Windows binaries and installer are signed with a free code signing certificate provided by [SignPath.io](https://signpath.io), certificate by [SignPath Foundation](https://signpath.org).'
+          } else {
+            'This project uses free code signing provided by [SignPath.io](https://signpath.io), certificate by [SignPath Foundation](https://signpath.org) (application pending: this release is not yet signed).'
+          }
           $notesFile = Join-Path $PWD 'release-notes.md'
           $notes = @"
           ## PGPKeyDesk $version (Windows x64, self-contained)
@@ -236,6 +241,13 @@ jobs:
           Verify: ``Get-FileHash .\$zip -Algorithm SHA256``
 
           **Installer** ``$setup`` SHA-256: ``$setupHash``
+
+          ### Code signing
+
+          $signLine
+          Code signing policy: https://github.com/domezos2024/PGPKeyDesk#code-signing-policy
+
+          Project website: https://tools-for-you.de/pgpkeydesk
           "@
           Set-Content -Path $notesFile -Value $notes -Encoding utf8
           gh release create $tag $zip "$zip.sha256" "installer/Output/$setup" "installer/Output/$setup.sha256" `
