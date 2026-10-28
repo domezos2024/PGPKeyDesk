@@ -5,7 +5,7 @@ PGPKeyDesk handles private PGP keys, so security reports are taken seriously.
 ## Reporting a vulnerability
 
 Please **do not open a public issue** for security problems. Use GitHub's private reporting instead:
-[Report a vulnerability](https://github.com/domezos2024/OpenGPG/security/advisories/new).
+[Report a vulnerability](https://github.com/domezos2024/PGPKeyDesk/security/advisories/new).
 
 Include the affected version, steps to reproduce and the expected impact. You will get an answer as soon as possible; this is a volunteer-maintained project, so there is no fixed SLA.
 

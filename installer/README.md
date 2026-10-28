@@ -1,5 +1,7 @@
 # PGPKeyDesk installer (Inno Setup 6)
 
+Project website: <https://tools-for-you.de/pgpkeydesk>
+
 Builds `PGPKeyDesk-<Version>-win-x64-setup.exe` from the self-contained win-x64 publish output.
 
 ## Build

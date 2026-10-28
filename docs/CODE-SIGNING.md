@@ -1,5 +1,7 @@
 # Code signing (SignPath Foundation)
 
+Project website: <https://tools-for-you.de/pgpkeydesk> · Repository: <https://github.com/domezos2024/PGPKeyDesk>
+
 PGPKeyDesk is prepared for free Authenticode signing by the [SignPath Foundation](https://signpath.org/) (open-source programme). The release workflow signs `PGPKeyDesk.exe`, `PGPKeyDesk.dll` and the installer **only when the setup below is done**; without it, releases are published unsigned (Windows SmartScreen then warns).
 
 > What cannot be automated: SignPath Foundation reviews every project by hand and issues the certificate to its own organisation. Only the project owner can apply and approve signing requests.
