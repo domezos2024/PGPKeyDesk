@@ -8,6 +8,8 @@
 
 [![Release](https://img.shields.io/github/v/release/domezos2024/PGPKeyDesk)](../../releases/latest) [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
+**Website:** [tools-for-you.de/pgpkeydesk](https://tools-for-you.de/pgpkeydesk) – project page with downloads, screenshots and checksums (German).
+
 A lightweight Windows desktop application (WPF, VB.NET, .NET 10) for managing **OpenPGP key profiles** and for **encrypting and decrypting PGP messages** – no GnuPG installation required. Cryptography is provided by [PgpCore](https://github.com/mattosaurus/PgpCore) (BouncyCastle).
 
 ## Features
@@ -57,6 +59,13 @@ Store recipients' public keys once and pick them from a list. Each entry shows t
 | ![Generate key pair dialog](docs/screenshots/generate-key-pair.png) | ![Add profile dialog](docs/screenshots/add-profile.png) |
 
 Generate an RSA 2048 or 4096 bit key pair protected by a passphrase, or import an existing private (and optional public) key as a profile. Keys are validated on import.
+
+## Unreleased (main)
+
+- File results are written atomically (temp file, moved into place only on success)
+- Cryptography runs off the UI thread; decrypt and signature check in a single pass
+- Warning before exporting a private key; dependency updates (PgpCore 8.0.0); `SECURITY.md`
+
 ## Changes in 2.1.0
 
 - Recipient keyring, key expiry warnings, file encryption, signature verification
@@ -111,19 +120,23 @@ dotnet publish PGPKeyDesk.vbproj -c Release -r win-x64 --self-contained true -o 
 - **Passphrases are never stored**; they exist in memory only for the duration of the respective operation.
 - Private keys are exported in plain text (armored, still passphrase-protected) – keep them safe.
 - The application makes no network connections and sends no telemetry.
-- This is not an audited product. For highly critical use cases, please use established tools (e.g. GnuPG). Please report vulnerabilities privately via GitHub "Security → Report a vulnerability".
+- This is not an audited product. For highly critical use cases, please use established tools (e.g. GnuPG). Please report vulnerabilities privately via GitHub "Security → Report a vulnerability" (see [SECURITY.md](SECURITY.md)).
 
 ## Project structure
 
 | Path | Contents |
 |------|----------|
 | `MainWindow.xaml(.vb)` | Main window: profiles, decrypt, encrypt |
+| `FilesView.xaml(.vb)` | Files tab: encrypt, decrypt, sign, verify files |
+| `KeyringWindow.xaml(.vb)` | Recipient keyring |
 | `GenerateKeyPairWindow.xaml(.vb)` | Key pair generator |
 | `AddProfileWindow.xaml(.vb)` | Import a profile |
 | `PassphraseDialog.xaml(.vb)` | Passphrase prompt |
-| `Services/` | `ProfileStore` (DPAPI storage), `KeyValidator` |
-| `Models/` | `PGPProfile` |
-| `Themes/` | Colors and control styles |
+| `Services/` | `PgpService` (crypto), `ProfileStore` (DPAPI storage), `RecipientKeyring`, `KeyValidator`, `KeyExpiry` |
+| `Models/` | `PGPProfile`, `RecipientKey` |
+| `Themes/`, `UiBrushes.vb` | Colors and control styles |
+| `tests/` | NUnit tests |
+| `installer/` | Inno Setup installer |
 
 ## Code signing policy
 

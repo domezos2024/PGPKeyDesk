@@ -12,7 +12,8 @@
 #define AppName      "PGPKeyDesk"
 #define AppExeName   "PGPKeyDesk.exe"
 #define AppPublisher "PGPKeyDesk contributors"
-#define AppURL       "https://github.com/domezos2024/OpenGPG"
+#define AppURL       "https://tools-for-you.de/pgpkeydesk"
+#define RepoURL      "https://github.com/domezos2024/PGPKeyDesk"
 #define FileProgId   "PGPKeyDesk.File"
 
 #if !FileExists(PublishDir + "\" + AppExeName)
@@ -27,8 +28,8 @@ AppVersion={#AppVersion}
 AppVerName={#AppName} {#AppVersion}
 AppPublisher={#AppPublisher}
 AppPublisherURL={#AppURL}
-AppSupportURL={#AppURL}/issues
-AppUpdatesURL={#AppURL}/releases
+AppSupportURL={#AppURL}
+AppUpdatesURL={#RepoURL}/releases
 VersionInfoVersion={#AppVersion}
 VersionInfoProductName={#AppName}
 VersionInfoDescription={#AppName} Setup
